@@ -81,6 +81,8 @@ export default defineNuxtConfig({
     strict: true,
   },
 
+  telemetry: false,
+
   hooks: {
     'content:file:afterParse'(ctx) {
       if (ctx.collection.name === 'posts' && typeof ctx.file.body === 'string') {
