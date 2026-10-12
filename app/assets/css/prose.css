@@ -1,0 +1,269 @@
+/* 文章正文排版：阅读优先，克制的层级与间距。 */
+
+.prose {
+  font-size: 1.0625rem;
+  line-height: 1.85;
+  color: var(--fg);
+  overflow-wrap: break-word;
+}
+
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose > :last-child {
+  margin-bottom: 0;
+}
+
+.prose :where(p, ul, ol, blockquote, table, pre, figure, .code-block, .table-wrapper) {
+  margin: 1.25em 0;
+}
+
+.prose :where(h1, h2, h3, h4, h5, h6) {
+  position: relative;
+  color: var(--fg);
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  scroll-margin-top: calc(var(--header-h) + 1.25rem);
+}
+
+.prose h1 {
+  margin: 2em 0 0.8em;
+  font-size: 2em;
+}
+
+.prose h2 {
+  margin: 2.2em 0 0.9em;
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.5em;
+}
+
+.prose h3 {
+  margin: 1.9em 0 0.7em;
+  font-size: 1.25em;
+}
+
+.prose h4 {
+  margin: 1.6em 0 0.6em;
+  font-size: 1.1em;
+}
+
+.prose h5 {
+  margin: 1.5em 0 0.5em;
+  font-size: 1em;
+}
+
+.prose h6 {
+  margin: 1.5em 0 0.5em;
+  font-size: 0.925em;
+  color: var(--muted);
+}
+
+.prose :is(h1, h2, h3, h4, h5, h6) > a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.prose :where(h2, h3, h4, h5, h6) > a::before {
+  content: "#";
+  position: absolute;
+  left: -1.1em;
+  padding-right: 0.3em;
+  color: var(--subtle);
+  font-weight: 400;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.prose :where(h2, h3, h4, h5, h6):hover > a::before,
+.prose :where(h2, h3, h4, h5, h6) > a:focus-visible::before {
+  opacity: 1;
+}
+
+.prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color 0.15s;
+}
+
+.prose a:hover {
+  text-decoration-color: var(--accent);
+}
+
+.prose strong {
+  font-weight: 650;
+}
+
+.prose :where(ul, ol) {
+  padding-left: 1.5em;
+}
+
+.prose ul {
+  list-style: disc;
+}
+
+.prose ol {
+  list-style: decimal;
+}
+
+.prose li {
+  margin: 0.35em 0;
+  padding-left: 0.2em;
+}
+
+.prose li > :where(ul, ol) {
+  margin: 0.35em 0;
+}
+
+.prose li::marker {
+  color: var(--subtle);
+}
+
+.prose ul.contains-task-list {
+  list-style: none;
+  padding-left: 0.25em;
+}
+
+.prose li.task-list-item {
+  padding-left: 0;
+}
+
+.prose li.task-list-item input[type="checkbox"] {
+  margin: 0 0.5em 0.15em 0;
+  vertical-align: middle;
+  accent-color: var(--accent);
+}
+
+.prose blockquote {
+  padding: 0.25em 1.1em;
+  border-left: 3px solid var(--border-strong);
+  color: var(--muted);
+}
+
+.prose blockquote > :where(p) {
+  margin: 0.6em 0;
+}
+
+.prose hr {
+  margin: 2.5em 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.75em auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+/* 表格 */
+.prose .table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.prose table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 0.925em;
+  line-height: 1.6;
+}
+
+.prose :where(th, td) {
+  padding: 0.6em 0.9em;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose th {
+  background: var(--surface);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.prose tr:last-child td {
+  border-bottom: 0;
+}
+
+/* 行内代码 */
+.prose :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+  background: var(--code-inline-bg);
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+}
+
+.prose a > code {
+  color: inherit;
+}
+
+/* 代码块 */
+.code-block {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--code-bg);
+}
+
+.code-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 2.25rem;
+  padding: 0 0.5rem 0 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 1rem 0;
+  overflow-x: auto;
+  background: transparent !important;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  tab-size: 2;
+}
+
+.code-block pre code {
+  display: block;
+  min-width: max-content;
+  padding: 0 1rem;
+}
+
+.code-block pre code .line {
+  display: block;
+  min-height: 1.7em;
+}
+
+.code-block pre code .line.highlight {
+  margin: 0 -1rem;
+  padding: 0 1rem;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+@media (max-width: 640px) {
+  .prose {
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+
+  .prose :where(h2, h3, h4, h5, h6) > a::before {
+    display: none;
+  }
+}

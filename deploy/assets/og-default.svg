@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#ffffff"/>
+  <rect x="0" y="0" width="1200" height="8" fill="#1f2328"/>
+  <g transform="translate(96 150)">
+    <rect width="72" height="72" rx="16" fill="#1f2328"/>
+    <path d="M16 23l7.2 27h1.4L32 31l7.2 19h1.4L48 23" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" transform="translate(4 0)"/>
+    <circle cx="60" cy="49" r="4.5" fill="#0b63ce"/>
+  </g>
+  <text x="96" y="330" font-family="Helvetica, Arial, sans-serif" font-size="84" font-weight="700" fill="#1f2328" letter-spacing="-2">WangHuan Lab</text>
+  <text x="100" y="400" font-family="Menlo, Consolas, monospace" font-size="32" fill="#59636e">Software &#183; Architecture &#183; AI &#183; Engineering</text>
+  <line x1="96" y1="490" x2="1104" y2="490" stroke="#e4e7eb" stroke-width="2"/>
+  <text x="96" y="545" font-family="Menlo, Consolas, monospace" font-size="26" fill="#0b63ce">blog.wanghuanlab.com</text>
+</svg>

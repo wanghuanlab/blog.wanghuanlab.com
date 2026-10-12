@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560">
+  <rect width="1200" height="560" fill="#f6f8fa"/>
+  <g font-family="Menlo, Consolas, monospace" font-size="22" fill="#1f2328" text-anchor="middle">
+    <rect x="80" y="230" width="220" height="100" rx="10" fill="#ffffff" stroke="#d1d9e0" stroke-width="2"/>
+    <text x="190" y="287">Client</text>
+    <rect x="420" y="230" width="220" height="100" rx="10" fill="#ffffff" stroke="#d1d9e0" stroke-width="2"/>
+    <text x="530" y="287">Gateway</text>
+    <rect x="760" y="100" width="360" height="90" rx="10" fill="#ffffff" stroke="#d1d9e0" stroke-width="2"/>
+    <text x="940" y="152">Service A</text>
+    <rect x="760" y="235" width="360" height="90" rx="10" fill="#ffffff" stroke="#d1d9e0" stroke-width="2"/>
+    <text x="940" y="287">Service B</text>
+    <rect x="760" y="370" width="360" height="90" rx="10" fill="#ffffff" stroke="#d1d9e0" stroke-width="2"/>
+    <text x="940" y="422">Registry / Config</text>
+  </g>
+  <g stroke="#0b63ce" stroke-width="2.5" fill="none">
+    <path d="M300 280h120"/>
+    <path d="M640 280h40v-135h80M680 280h80M680 280v135h80"/>
+  </g>
+  <text x="600" y="520" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#818b98" text-anchor="middle">Figure &#183; Architecture placeholder</text>
+</svg>

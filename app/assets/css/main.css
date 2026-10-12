@@ -1,0 +1,115 @@
+@import "tailwindcss";
+@import "./prose.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-hover: var(--hover);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-mark: var(--mark);
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+:root {
+  --bg: #ffffff;
+  --surface: #f6f8fa;
+  --elevated: #ffffff;
+  --hover: #eff2f5;
+  --fg: #1f2328;
+  --muted: #59636e;
+  --subtle: #6a737d;
+  --border: #e4e7eb;
+  --border-strong: #d1d9e0;
+  --accent: #0b63ce;
+  --accent-soft: #ddf0ff;
+  --mark: #fff1a8;
+  --code-bg: #f6f8fa;
+  --code-inline-bg: #eff1f3;
+  --header-h: 3.5rem;
+
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0d1117;
+  --surface: #151b23;
+  --elevated: #161b22;
+  --hover: #232a34;
+  --fg: #e6edf3;
+  --muted: #9198a1;
+  --subtle: #848d97;
+  --border: #262c36;
+  --border-strong: #3d444d;
+  --accent: #58a6ff;
+  --accent-soft: #121d2f;
+  --mark: #5c4a00;
+  --code-bg: #151b23;
+  --code-inline-bg: #212830;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    @apply bg-bg text-fg font-sans antialiased;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  kbd {
+    @apply inline-flex items-center rounded border border-border bg-surface px-1.5 font-mono text-[11px] leading-5 text-muted;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+
+  .container-narrow {
+    @apply mx-auto w-full max-w-3xl px-5 sm:px-8;
+  }
+
+  .link-muted {
+    @apply text-muted transition-colors hover:text-fg;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted transition-colors hover:border-border-strong hover:text-fg;
+  }
+
+  .icon-button {
+    @apply inline-flex size-9 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface hover:text-fg;
+  }
+}
