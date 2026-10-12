@@ -19,6 +19,8 @@ logs
 .idea
 .vscode/*
 !.vscode/extensions.json
+.cursor
+.gemini
 
 # Local env files
 .env
