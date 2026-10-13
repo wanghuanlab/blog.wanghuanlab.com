@@ -42,36 +42,9 @@ Apache Flink 是 Apache 软件基金会的开源分布式数据处理引擎，�
 
 ### 典型 Flink 实时处理架构
 
-```text
-[数据源 (Source)]
-  ├── 设备 MQTT
-  ├── 业务数据库 CDC
-  ├── 应用事件
-  └── 传感器采集
-          │
-          ▼
-[Kafka / 消息队列] (缓冲、解耦、持久化、回放)
-          │
-          ▼
-[Apache Flink 实时计算引擎]
-  ├── 数据清洗与标准化
-  ├── 实时窗口聚合
-  ├── 规则判断与状态计算
-  ├── 多流关联与维表补全
-  └── 异常检测与指标生成
-          │
-          ├───────────────────┼───────────────────┐
-          ▼                   ▼                   ▼
-    [Redis 缓存]       [OLAP / 时序库]     [Kafka / 告警服务]
-    (设备最新状态)      (指标与趋势查询)      (事件通知与工单)
-          │                   │                   │
-          └───────────────────┼───────────────────┘
-                              ▼
-    [Spring Boot 业务接口 / WebSocket 服务]
-                              │
-                              ▼
-        [可视化大屏 / 数字孪生 / 生产调度系统]
-```
+![典型 Flink 实时处理架构](/images/posts/flink-pipeline-architecture.svg){width="1200" height="520"}
+
+> 💡 **提示**：该架构图由 [Archify](https://github.com/tt-a1i/archify) 引擎渲染生成。你也可以[在新标签页中打开全屏可探索交互式架构图 ↗](/diagrams/flink-pipeline-architecture.html)，支持节点高亮、暗色/明亮主题切换与路径追踪。
 
 > **注意：系统组件的定位完全不同，它们是互补关系而非相互替代：**
 > - **Kafka**：负责数据的传输、缓冲、解耦和持久化回放；
@@ -179,12 +152,9 @@ Flink 依靠 **Checkpoint（检查点）** 机制周期性地为流作业生成�
 2. 保存所有算子内存/磁盘中的中间状态；
 3. 当发生故障时，JobManager 调度作业回退到最近一次成功的快照，从对应 Offset 重新消费并恢复状态。
 
-```text
-[正常处理数据] ──> [触发 Checkpoint 制作快照] ──> [继续处理]
-                                                        │
-                                                        ▼ (突然宕机)
-[拉起重启新实例] <── [从上次成功快照恢复状态并从断点重播]
-```
+![Flink Checkpoint 故障恢复机制](/images/posts/flink-checkpoint-recovery.svg){width="1200" height="420"}
+
+> 💡 **提示**：该生命周期状态流转图由 [Archify](https://github.com/tt-a1i/archify) 引擎渲染生成。你也可以[在新标签页中打开全屏交互式生命周期图 ↗](/diagrams/flink-checkpoint-recovery.html)。
 
 #### Checkpoint 与 Savepoint 的区别
 
@@ -713,36 +683,9 @@ Caused by: java.lang.NoClassDefFoundError: com/rabbitmq/client/Delivery
 
 对于物联网、能源监控、智能建造与数字孪生等平台，建议采用如下分层架构：
 
-```text
-[数据采集源]
-   MQTT / OPC-UA / 业务系统 binlog / 第三方 API
-                       │
-                       ▼
-[数据接入与缓冲]
-   MQTT Broker / SeaTunnel CDC ──> Apache Kafka 消息总线
-                                          │
-                       ┌──────────────────┴──────────────────┐
-                       ▼                                     ▼
-        [Flink 实时计算中心]                           [数据归档链路]
-          ├── 格式标准化与数据清洗                       MinIO / HDFS 长期冷存
-          ├── 1/5/15 分钟多级滑动窗口统计
-          ├── 动态阈值与复杂事件处理 (CEP)
-          └── 设备台账维表关联 (PostgreSQL Lookup)
-                       │
-                       ├── 写入实时状态缓存 ──> Redis Cluster
-                       ├── 写入多维时序分析 ──> TimescaleDB / ClickHouse / Doris
-                       └── 输出事件与工单   ──> Kafka 告警 Topic
-                                                      │
-                       ┌──────────────────────────────┘
-                       ▼
-       [业务应用与数据服务层 (Spring Boot)]
-          ├── WebSocket 实时指标推送
-          ├── 告警短信/邮件/通知派单
-          └── RESTful 历史趋势报表 API
-                       │
-                       ▼
-       [前端展示 / 数字孪生引擎 / 生产驾驶舱]
-```
+![企业级实时数据处理参考架构](/images/posts/flink-enterprise-architecture.svg){width="1200" height="580"}
+
+> 💡 **提示**：该企业参考架构图由 [Archify](https://github.com/tt-a1i/archify) 引擎渲染生成。你也可以[在新标签页中打开全屏交互式架构图 ↗](/diagrams/flink-enterprise-architecture.html)，支持边界框选、多端连接高亮与详细卡片说明。
 
 ### 存储职责划分表
 
@@ -791,22 +734,9 @@ Caused by: java.lang.NoClassDefFoundError: com/rabbitmq/client/Delivery
 
 建议 Java 开发者按照以下四步稳步推进：
 
-```text
-[阶段一：基础与原理 (2~3 天)]
-   理解 Stream、KeyBy、Window、State、Event Time、Watermark、Checkpoint 与 Flink SQL 基本语法
-                 │
-                 ▼
-[阶段二：本地实战演练 (3~5 天)]
-   Docker 快速启动 Flink、Kafka、PostgreSQL，用 Java 实现设备流消费、有状态告警判定并批量入库
-                 │
-                 ▼
-[阶段三：企业级能力建设 (约 1 周)]
-   实战 RocksDB 状态后端、State TTL、Checkpoint 故障恢复演练、Flink CDC 整库实时同步
-                 │
-                 ▼
-[阶段四：真实业务场景落地]
-   选取一条非核心但具备实时要求的业务链路（如环境指标实时监控、大屏实时统计）全流程验证上线
-```
+![Flink 学习与企业级落地实施路线](/images/posts/flink-learning-roadmap.svg){width="1200" height="380"}
+
+> 💡 **提示**：该学习进阶路线工作流图由 [Archify](https://github.com/tt-a1i/archify) 引擎渲染生成。你也可以[在新标签页中打开全屏交互式路线图 ↗](/diagrams/flink-learning-roadmap.html)。
 
 - **官方资源**：[Apache Flink 官网](https://flink.apache.org/) ｜ [下载与 Release Notes](https://flink.apache.org/downloads/) ｜ [应用场景案例](https://flink.apache.org/what-is-flink/flink-applications/)
 

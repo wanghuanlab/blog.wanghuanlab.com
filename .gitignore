@@ -21,6 +21,7 @@ logs
 !.vscode/extensions.json
 .cursor
 .gemini
+.archify*
 
 # Local env files
 .env
