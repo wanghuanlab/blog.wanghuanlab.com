@@ -42,9 +42,8 @@ Apache Flink 是 Apache 软件基金会的开源分布式数据处理引擎，�
 
 ### 典型 Flink 实时处理架构
 
-![典型 Flink 实时处理架构](/images/posts/flink-pipeline-architecture.svg){width="1200" height="520"}
-
-> 💡 **提示**：该架构图由 [Archify](https://github.com/tt-a1i/archify) 引擎渲染生成。你也可以[在新标签页中打开全屏可探索交互式架构图 ↗](/diagrams/flink-pipeline-architecture.html)，支持节点高亮、暗色/明亮主题切换与路径追踪。
+::archify-diagram{src="/diagrams/flink-pipeline-architecture.html" title="典型 Flink 实时数据处理架构" height="520"}
+::
 
 > **注意：系统组件的定位完全不同，它们是互补关系而非相互替代：**
 > - **Kafka**：负责数据的传输、缓冲、解耦和持久化回放；
@@ -152,9 +151,8 @@ Flink 依靠 **Checkpoint（检查点）** 机制周期性地为流作业生成�
 2. 保存所有算子内存/磁盘中的中间状态；
 3. 当发生故障时，JobManager 调度作业回退到最近一次成功的快照，从对应 Offset 重新消费并恢复状态。
 
-![Flink Checkpoint 故障恢复机制](/images/posts/flink-checkpoint-recovery.svg){width="1200" height="420"}
-
-> 💡 **提示**：该生命周期状态流转图由 [Archify](https://github.com/tt-a1i/archify) 引擎渲染生成。你也可以[在新标签页中打开全屏交互式生命周期图 ↗](/diagrams/flink-checkpoint-recovery.html)。
+::archify-diagram{src="/diagrams/flink-checkpoint-recovery.html" title="Flink Checkpoint 故障恢复与状态重播机制" height="420"}
+::
 
 #### Checkpoint 与 Savepoint 的区别
 
@@ -683,9 +681,8 @@ Caused by: java.lang.NoClassDefFoundError: com/rabbitmq/client/Delivery
 
 对于物联网、能源监控、智能建造与数字孪生等平台，建议采用如下分层架构：
 
-![企业级实时数据处理参考架构](/images/posts/flink-enterprise-architecture.svg){width="1200" height="580"}
-
-> 💡 **提示**：该企业参考架构图由 [Archify](https://github.com/tt-a1i/archify) 引擎渲染生成。你也可以[在新标签页中打开全屏交互式架构图 ↗](/diagrams/flink-enterprise-architecture.html)，支持边界框选、多端连接高亮与详细卡片说明。
+::archify-diagram{src="/diagrams/flink-enterprise-architecture.html" title="企业级实时数据处理参考架构" height="580"}
+::
 
 ### 存储职责划分表
 
@@ -734,9 +731,8 @@ Caused by: java.lang.NoClassDefFoundError: com/rabbitmq/client/Delivery
 
 建议 Java 开发者按照以下四步稳步推进：
 
-![Flink 学习与企业级落地实施路线](/images/posts/flink-learning-roadmap.svg){width="1200" height="380"}
-
-> 💡 **提示**：该学习进阶路线工作流图由 [Archify](https://github.com/tt-a1i/archify) 引擎渲染生成。你也可以[在新标签页中打开全屏交互式路线图 ↗](/diagrams/flink-learning-roadmap.html)。
+::archify-diagram{src="/diagrams/flink-learning-roadmap.html" title="Flink 学习与企业级落地实施路线" height="380"}
+::
 
 - **官方资源**：[Apache Flink 官网](https://flink.apache.org/) ｜ [下载与 Release Notes](https://flink.apache.org/downloads/) ｜ [应用场景案例](https://flink.apache.org/what-is-flink/flink-applications/)
 
