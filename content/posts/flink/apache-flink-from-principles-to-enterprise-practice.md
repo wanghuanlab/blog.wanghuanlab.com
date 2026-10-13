@@ -1,8 +1,8 @@
 ---
 title: "Apache Flink 技术详解：从原理到企业项目落地"
-description: "深入剖析 Apache Flink 流计算核心原理与企业落地实践，结合 Java、Spring Boot、Kafka 与 PostgreSQL，详解六大应用场景、核心机制、代码实战、Flink SQL 与避坑指南。"
+description: "深入剖析 Apache Flink 流计算核心原理与企业落地实践，结合 Java、Spring Boot、RabbitMQ、Kafka 与 PostgreSQL，详解六大应用场景、有界流与无界流机制、REST API 与胖包打包部署、本地 MiniCluster 调试、代码实战、Flink SQL 与避坑指南。"
 date: "2026-10-12"
-updated: "2026-10-12"
+updated: "2026-10-13"
 category: "Big Data"
 tags:
   - Flink
@@ -207,6 +207,34 @@ Flink 是典型的分布式主从（Master-Worker）架构：
 
 > **并行度设计原则**：并非并行度设得越高就越快。如果 Kafka Topic 只有 4 个分区，Source 并行度设为 16 就会有 12 个子任务闲置；同时还要综合考虑数据倾斜、网络 IO、状态大小以及下游数据库的承载能力。
 
+### 7. 有界流（Bounded）与无界流（Unbounded）：为什么有的任务会自动结束，有的永远 RUNNING？
+
+在开发或提交 Flink 作业时，一个最直观的现象是：有的 Job 运行几秒就显示 `FINISHED`，而有的 Job 却永远常驻处于 `RUNNING` 状态：
+
+| 流类型 | 数据特征 | 典型数据源 | 作业终态 | 设计定位 |
+| --- | --- | --- | --- | --- |
+| **有界流（Bounded Stream）** | 数据量固定、有明确起点和终点 | `fromElements()`、文件 CSV、固定数据集 | **`FINISHED`** | 批处理语义。所有数据消费完毕后，Source 发出 `EndOfInput` 信号，各算子完成处理并自动释放集群计算资源。 |
+| **无界流（Unbounded Stream）** | 数据持续产生、无终止时间、随时到达 | RabbitMQ、Kafka、MQTT、CDC Binlog | **持续 `RUNNING`** | 实时流计算语义。Source 算子保持阻塞监听或轮询状态，作业常驻集群 7×24 小时待命，毫秒级响应到来的实时事件。 |
+
+> **运维提示**：常驻流作业只有在**人工显式触发 Cancel（带有或不带 Savepoint）**、或者集群遇到不可恢复故障（达到重启重试上限）时才会退出。
+
+### 8. 本地 IDEA 运行机制：MiniCluster 嵌入模式 vs 独立集群模式
+
+很多开发者在 IDEA 中写完 `main` 方法后点击 `Run`，发现控制台直接打印了结果，但在 `http://localhost:8081` 集群 Web 界面上却找不到任何作业。这背后是 Flink 强大的**本地极速调试机制**：
+
+```java
+final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+```
+
+`getExecutionEnvironment()` 会根据调用上下文智能切换底层运行引擎：
+1. **本地调试模式（MiniCluster / Embedded Mode）**：
+   - 当在 IDE（如 IntelliJ IDEA）中直接运行 `main` 方法时，Flink 检测到当前是非集群宿主环境，会**在当前 Java 进程内轻量内嵌启动一个微型 Flink 引擎**；
+   - 它利用本地多核 CPU 线程模拟并发 Slot（控制台输出的 `8> (word, 1)`、`10> (word, 2)` 前缀数字，即代表分配处理该键的并行子任务编号）；
+   - **特点**：无需本地预装或启动任何 Flink 服务，断点秒级命中断点调试，跑完即随 JVM 退出销毁。
+2. **集群提交模式（Remote / Standalone / K8s）**：
+   - 将业务代码打成 JAR 包，通过 Web UI、命令行 CLI 或 REST API 提交至独立运行的 JobManager；
+   - 此时作业分配给独立的 TaskManager 进程执行，任务拓扑展示在 `http://localhost:8081`，标准输出重定向到 TaskManager 节点的 `*.out` 日志文件中。
+
 ---
 
 ## 四、Flink、Kafka、Spring Boot、Spark、SeaTunnel 区别
@@ -406,7 +434,282 @@ GROUP BY device_id, window_start, window_end;
 
 ---
 
-## 七、企业级落地参考架构
+## 七、实战闭环案例：RabbitMQ 实时事件流 ➔ Flink 状态计算 ➔ PostgreSQL 幂等入库
+
+除了 Kafka 之外，在不少轻量级物联网边缘计算、无人机飞控遥测或既有微服务集群中，**RabbitMQ** 也是极为常见的高性能消息中间件。
+
+本节演示一个工业级**无界流完整闭环**：
+1. **输入端**：Flink 自定义 `RichSourceFunction` 监听 RabbitMQ 消息队列；
+2. **计算端**：实时分词、KeyBy 路由与状态累加；
+3. **输出端**：自定义 `RichSinkFunction` 执行 PostgreSQL **Upsert 幂等写入**；
+4. **控制端**：独立 Java 客户端通过 **Flink REST API** 实现作业动态上传、提交与拓扑监控。
+
+### 1. 流计算作业源码：`WordFrequencyStreamJob.java`
+
+```java
+package com.wanghuanlab.flink;
+
+import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.common.functions.OpenContext;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.legacy.RichSinkFunction;
+import org.apache.flink.streaming.api.functions.sink.legacy.SinkFunction;
+import org.apache.flink.streaming.api.functions.source.legacy.RichSourceFunction;
+import org.apache.flink.util.Collector;
+
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DeliverCallback;
+
+import java.nio.charset.StandardCharsets;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 实时无界流计算作业：RabbitMQ 实时消费 ➔ 分词聚合 ➔ 写入 PostgreSQL
+ */
+public class WordFrequencyStreamJob {
+
+    public static void main(String[] args) throws Exception {
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        // 1. 接入 RabbitMQ 实时数据源 (监听队列: uas.trend.words)
+        DataStream<String> text = env.addSource(new RabbitMQTextSource(
+                "127.0.0.1", 15673, "/", "uas", "uas_local_dev", "uas.trend.words"
+        )).name("RabbitMQ-Source");
+
+        // 2. 流式转换与分组累加 (按单词分组，状态增量求和)
+        DataStream<Tuple2<String, Integer>> counts = text
+                .flatMap(new Tokenizer())
+                .keyBy(value -> value.f0)
+                .sum(1);
+
+        counts.print();
+
+        // 3. 自定义 PostgreSQL Upsert Sink 实时落地
+        counts.addSink(new PostgresWordFrequencySink(
+                "jdbc:postgresql://127.0.0.1:15432/uas", "uas", "uas_local_dev"
+        )).name("PostgreSQL-Sink");
+
+        env.execute("WangHuanLab-WordFrequency-RabbitMQ-Job");
+    }
+
+    /**
+     * 文本切词器
+     */
+    public static final class Tokenizer implements FlatMapFunction<String, Tuple2<String, Integer>> {
+        @Override
+        public void flatMap(String value, Collector<Tuple2<String, Integer>> out) {
+            String[] tokens = value.toLowerCase().split("\\W+");
+            for (String token : tokens) {
+                if (!token.isEmpty()) {
+                    out.collect(new Tuple2<>(token, 1));
+                }
+            }
+        }
+    }
+
+    /**
+     * 自定义 RabbitMQ 消息源（生命周期管理与背压缓冲）
+     */
+    public static class RabbitMQTextSource extends RichSourceFunction<String> {
+        private final String host;
+        private final int port;
+        private final String virtualHost;
+        private final String username;
+        private final String password;
+        private final String queueName;
+
+        private volatile boolean isRunning = true;
+        private transient com.rabbitmq.client.Connection connection;
+        private transient Channel channel;
+        private transient BlockingQueue<String> buffer;
+
+        public RabbitMQTextSource(String host, int port, String virtualHost, 
+                                  String username, String password, String queueName) {
+            this.host = host;
+            this.port = port;
+            this.virtualHost = virtualHost;
+            this.username = username;
+            this.password = password;
+            this.queueName = queueName;
+        }
+
+        @Override
+        public void open(OpenContext openContext) throws Exception {
+            super.open(openContext);
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost(host);
+            factory.setPort(port);
+            factory.setVirtualHost(virtualHost);
+            factory.setUsername(username);
+            factory.setPassword(password);
+            factory.setAutomaticRecoveryEnabled(true);
+
+            connection = factory.newConnection("flink-source-consumer");
+            channel = connection.createChannel();
+            channel.queueDeclare(queueName, true, false, false, null);
+            channel.basicQos(64);
+
+            buffer = new LinkedBlockingQueue<>(2048);
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String body = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                if (!body.trim().isEmpty()) {
+                    buffer.offer(body);
+                }
+                try {
+                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                } catch (Exception ignored) {}
+            };
+            channel.basicConsume(queueName, false, deliverCallback, consumerTag -> {});
+        }
+
+        @Override
+        public void run(SourceContext<String> ctx) throws Exception {
+            while (isRunning) {
+                String message = buffer.poll(200, TimeUnit.MILLISECONDS);
+                if (message != null) {
+                    synchronized (ctx.getCheckpointLock()) {
+                        ctx.collect(message);
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void cancel() {
+            isRunning = false;
+        }
+    }
+
+    /**
+     * PostgreSQL 幂等 Upsert Sink：保证大屏与业务库实时可查最新统计值
+     */
+    public static class PostgresWordFrequencySink extends RichSinkFunction<Tuple2<String, Integer>> {
+        private final String url;
+        private final String username;
+        private final String password;
+
+        private transient java.sql.Connection connection;
+        private transient PreparedStatement upsertStatement;
+
+        public PostgresWordFrequencySink(String url, String username, String password) {
+            this.url = url;
+            this.username = username;
+            this.password = password;
+        }
+
+        @Override
+        public void open(OpenContext openContext) throws Exception {
+            super.open(openContext);
+            Class.forName("org.postgresql.Driver");
+            connection = DriverManager.getConnection(url, username, password);
+
+            // PostgreSQL 专有 Upsert 语法：存在即覆盖更新，不存在即插入
+            String sql = "INSERT INTO uas_flink_word_frequency (word, frequency, updated_at) " +
+                    "VALUES (?, ?, CURRENT_TIMESTAMP) " +
+                    "ON CONFLICT (word) DO UPDATE SET " +
+                    "frequency = EXCLUDED.frequency, " +
+                    "updated_at = CURRENT_TIMESTAMP";
+            upsertStatement = connection.prepareStatement(sql);
+        }
+
+        @Override
+        public void invoke(Tuple2<String, Integer> value, SinkFunction.Context context) throws Exception {
+            upsertStatement.setString(1, value.f0);
+            upsertStatement.setInt(2, value.f1);
+            upsertStatement.executeUpdate();
+        }
+
+        @Override
+        public void close() throws Exception {
+            if (upsertStatement != null) try { upsertStatement.close(); } catch (SQLException ignored) {}
+            if (connection != null) try { connection.close(); } catch (SQLException ignored) {}
+            super.close();
+        }
+    }
+}
+```
+
+### 2. 通过 Java 原生 REST 客户端动态调度 Flink 集群
+
+除了手动登录 Web 界面上传外，企业系统中常通过 Spring Boot 或中台管理服务直接与 Flink JobManager 通信：
+
+```java
+// 使用 Java 11+ HttpClient 调用 Flink REST 接口 (http://localhost:8081)
+HttpClient client = HttpClient.newHttpClient();
+
+// 1. 查询集群总体 Slot 与健康状态
+HttpRequest reqOverview = HttpRequest.newBuilder()
+        .uri(URI.create("http://localhost:8081/overview")).GET().build();
+String overview = client.send(reqOverview, HttpResponse.BodyHandlers.ofString()).body();
+
+// 2. 上传编译好的 Fat Jar
+// POST http://localhost:8081/jars/upload (带 multipart/form-data 报文头)
+
+// 3. 远程触发执行指定的计算拓扑
+String runUrl = "http://localhost:8081/jars/" + jarId + "/run?entry-class=" + entryClass;
+HttpRequest reqRun = HttpRequest.newBuilder()
+        .uri(URI.create(runUrl))
+        .header("Content-Type", "application/json")
+        .POST(HttpRequest.BodyPublishers.ofString("{}")).build();
+String jobResponse = client.send(reqRun, HttpResponse.BodyHandlers.ofString()).body();
+// 解析返回的 {"jobid":"b80d242ca13c67..."}，随后可根据 Job ID 轮询或监控执行拓扑
+```
+
+### 3. 打包发布关键：Fat Jar（胖包）与 `NoClassDefFoundError` 根治
+
+在把写好的 JAR 上传到独立 Flink 集群执行时，最常见的报错是：
+```text
+Caused by: java.lang.NoClassDefFoundError: com/rabbitmq/client/Delivery
+```
+- **原因**：Flink 集群的 `lib/` 目录下只有 Flink 自身的引擎库，并没有业务引入的第三方库（RabbitMQ Client、PostgreSQL JDBC 驱动等）。如果打出的只是普通瘦包，提交后集群 JVM 便无法解析对应类。
+- **最佳实践**：使用 `maven-shade-plugin` 将业务依赖完整打入 JAR，同时将 Flink 核心依赖声明为 `system` 或 `provided`（避免打入数百兆冗余代码），并**务必过滤第三方 JAR 签名文件**（防止 `SecurityException`）：
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-shade-plugin</artifactId>
+    <version>3.6.2</version>
+    <executions>
+        <execution>
+            <id>shade-flink-demo</id>
+            <phase>package</phase>
+            <goals>
+                <goal>shade</goal>
+            </goals>
+            <configuration>
+                <filters>
+                    <!-- 过滤第三方 jar 签名文件，防止签名摘要校验失败 -->
+                    <filter>
+                        <artifact>*:*</artifact>
+                        <excludes>
+                            <exclude>META-INF/*.SF</exclude>
+                            <exclude>META-INF/*.DSA</exclude>
+                            <exclude>META-INF/*.RSA</exclude>
+                        </excludes>
+                    </filter>
+                </filters>
+                <transformers combine.children="replace">
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <mainClass>com.wanghuanlab.flink.WordFrequencyStreamJob</mainClass>
+                    </transformer>
+                </transformers>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+---
+
+## 八、企业级落地参考架构
 
 对于物联网、能源监控、智能建造与数字孪生等平台，建议采用如下分层架构：
 
@@ -451,7 +754,7 @@ GROUP BY device_id, window_start, window_end;
 
 ---
 
-## 八、实际落地避坑指南
+## 九、实际落地避坑指南
 
 根据一线生产环境总结，以下问题比单纯学习语法更为重要：
 
@@ -467,7 +770,7 @@ GROUP BY device_id, window_start, window_end;
 
 ---
 
-## 九、2026 年 Flink 版本选型建议
+## 十、2026 年 Flink 版本选型建议
 
 截至 2026 年 10 月，官方维护的核心版本概况如下：
 
@@ -484,7 +787,7 @@ GROUP BY device_id, window_start, window_end;
 
 ---
 
-## 十、高效学习与落地实施路线
+## 十一、高效学习与落地实施路线
 
 建议 Java 开发者按照以下四步稳步推进：
 
@@ -509,7 +812,7 @@ GROUP BY device_id, window_start, window_end;
 
 ---
 
-## 十一、总结：何时引入 Flink？
+## 十二、总结：何时引入 Flink？
 
 在技术选型时，最忌讳“为了用大数据框架而用大数据框架”。
 
