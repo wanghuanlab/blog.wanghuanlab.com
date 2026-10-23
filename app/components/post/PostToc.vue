@@ -20,21 +20,21 @@ function flatten(items: TocItem[]): TocItem[] {
 }
 
 const items = computed(() => flatten(props.links))
-const minDepth = computed(() => Math.min(...items.value.map(item => item.depth)))
+const minDepth = computed(() => items.value.length ? Math.min(...items.value.map(item => item.depth)) : 0)
 </script>
 
 <template>
-  <ul class="space-y-1 border-l border-border text-sm">
+  <ul class="space-y-0.5 text-[13px]">
     <li
       v-for="item in items"
       :key="item.id"
     >
       <a
         :href="`#${item.id}`"
-        class="-ml-px block border-l py-1 leading-snug transition-colors"
+        class="block min-h-11 rounded py-2 pr-1 leading-relaxed break-words transition-colors xl:min-h-10"
         :class="item.id === activeId
-          ? 'border-accent text-fg'
-          : 'border-transparent text-muted hover:text-fg'"
+          ? 'bg-accent-soft text-accent'
+          : 'text-muted hover:bg-surface hover:text-fg'"
         :style="{ paddingLeft: `${0.75 + (item.depth - minDepth) * 0.875}rem` }"
         :aria-current="item.id === activeId ? 'location' : undefined"
         @click="emit('select', item.id)"

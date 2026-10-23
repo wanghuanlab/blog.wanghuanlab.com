@@ -36,7 +36,7 @@ const LANGUAGE_LABELS: Record<string, string> = {
   diff: 'Diff',
 }
 
-const COPIED_RESET_MS = 2000
+const COPY_FEEDBACK_MS = 2500
 
 const props = withDefaults(defineProps<{
   code?: string
@@ -60,43 +60,57 @@ const label = computed(() => {
   return LANGUAGE_LABELS[props.language.toLowerCase()] ?? props.language
 })
 
-const copied = ref(false)
+const copyState = ref<'idle' | 'copying' | 'copied' | 'error'>('idle')
+const copyLabel = computed(() => ({ idle: '复制', copying: '复制中', copied: '已复制', error: '复制失败，请重试' })[copyState.value])
 let resetTimer: ReturnType<typeof setTimeout> | undefined
+let isUnmounted = false
 
 async function copy() {
+  if (copyState.value === 'copying') return
+  clearTimeout(resetTimer)
+  copyState.value = 'copying'
   try {
     await navigator.clipboard.writeText(props.code)
-    copied.value = true
-    clearTimeout(resetTimer)
-    resetTimer = setTimeout(() => {
-      copied.value = false
-    }, COPIED_RESET_MS)
+    if (isUnmounted) return
+    copyState.value = 'copied'
   }
   catch {
-    copied.value = false
+    if (isUnmounted) return
+    copyState.value = 'error'
   }
+  resetTimer = setTimeout(() => {
+    copyState.value = 'idle'
+  }, COPY_FEEDBACK_MS)
 }
 
-onBeforeUnmount(() => clearTimeout(resetTimer))
+onBeforeUnmount(() => {
+  isUnmounted = true
+  clearTimeout(resetTimer)
+})
 </script>
 
 <template>
   <div class="code-block">
     <div class="code-block__header">
-      <span class="truncate">{{ label }}</span>
+      <span class="min-w-0 break-all">{{ label }}</span>
       <button
         type="button"
-        class="inline-flex h-7 items-center gap-1.5 rounded px-2 transition-colors hover:bg-bg hover:text-fg"
-        title="复制代码"
+        class="code-block__copy"
+        :aria-label="copyState === 'error' ? '复制失败，点击重试' : `复制 ${label} 代码`"
+        :disabled="copyState === 'copying'"
         @click="copy"
       >
         <AppIcon
-          :name="copied ? 'check' : 'copy'"
+          :name="copyState === 'copied' ? 'check' : 'copy'"
           :size="14"
         />
-        <span aria-live="polite">{{ copied ? 'Copied' : 'Copy' }}</span>
+        <span role="status">{{ copyLabel }}</span>
       </button>
     </div>
-    <pre :class="props.class"><slot /></pre>
+    <pre
+      :class="props.class"
+      tabindex="0"
+      :aria-label="`${label} 代码，可横向滚动`"
+    ><slot /></pre>
   </div>
 </template>

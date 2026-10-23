@@ -130,7 +130,7 @@
 
         <!-- Escalate Gate 回传 Supervisor -->
         <path d="M 860 290 L 910 290 L 910 60 L 685 60" fill="none" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowhead-emerald)" />
-        <text x="915" y="180" fill="#34d399" font-size="8" transform="rotate(90, 915, 180)">质检达标放行 (Escalate 回传主控)</text>
+        <text x="915" y="180" fill="#34d399" font-size="8" transform="rotate(90, 915, 180)">批准检查通过后返回主控</text>
 
         <!-- Temporal -> Workflows 保活驱动 (从底部向上虚线连接) -->
         <line x1="170" y1="380" x2="170" y2="320" stroke="#fb923c" stroke-width="1.2" stroke-dasharray="4,4" />
@@ -142,7 +142,7 @@
         <rect x="275" y="30" width="410" height="60" rx="8" fill="rgba(8, 51, 68, 0.45)" stroke="#22d3ee" stroke-width="1.5"/>
         <text x="480" y="54" fill="white" font-size="12" font-weight="700" text-anchor="middle">Supervisor 协调总控层 (LlmAgent + AgentTool)</text>
         <text x="480" y="72" fill="#94a3b8" font-size="8.5" text-anchor="middle">全局目标理解 · 动态任务规划 · 专员工具调用 · 成果汇总与交付</text>
-        <text x="480" y="84" fill="#22d3ee" font-size="7.5" text-anchor="middle">【核心优势】子 Agent 封装为 Tool，主控始终握紧对话权，绝不失控</text>
+        <text x="480" y="84" fill="#22d3ee" font-size="7.5" text-anchor="middle">工具式委派后返回主控；预算、权限与验收仍需约束</text>
 
         <!-- ==================== 2. Workflow Layer ==================== -->
         <!-- Sequential -->
@@ -150,40 +150,40 @@
         <rect x="50" y="145" width="240" height="60" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
         <text x="170" y="168" fill="white" font-size="11" font-weight="600" text-anchor="middle">业务流水 (SequentialAgent)</text>
         <text x="170" y="184" fill="#94a3b8" font-size="8" text-anchor="middle">规划 ──> 执行 ──> 归档</text>
-        <text x="170" y="196" fill="#34d399" font-size="7.5" text-anchor="middle">固定前后依赖 · 顺序合规不可跳步</text>
+        <text x="170" y="196" fill="#34d399" font-size="7.5" text-anchor="middle">固定执行次序 · 业务条件由门禁校验</text>
 
         <!-- Parallel -->
         <rect x="360" y="145" width="240" height="60" rx="6" fill="#0f172a"/>
         <rect x="360" y="145" width="240" height="60" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
         <text x="480" y="168" fill="white" font-size="11" font-weight="600" text-anchor="middle">并发分析 (ParallelAgent)</text>
         <text x="480" y="184" fill="#94a3b8" font-size="8" text-anchor="middle">技术调研 || 安全扫描 || 成本核算</text>
-        <text x="480" y="196" fill="#34d399" font-size="7.5" text-anchor="middle">Fork-Join 汇聚 · 墙钟耗时极限压缩</text>
+        <text x="480" y="196" fill="#34d399" font-size="7.5" text-anchor="middle">独立分支并发 · 仍需关注限流与长尾</text>
 
         <!-- Loop -->
         <rect x="670" y="145" width="240" height="60" rx="6" fill="#0f172a"/>
         <rect x="670" y="145" width="240" height="60" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
         <text x="790" y="168" fill="white" font-size="11" font-weight="600" text-anchor="middle">质检自愈闭环 (LoopAgent)</text>
         <text x="790" y="184" fill="#94a3b8" font-size="8" text-anchor="middle">Drafter ⇄ Critic 质检评估</text>
-        <text x="790" y="196" fill="#fb7185" font-size="7.5" text-anchor="middle">max_iterations 兜底 · 严格规则打分</text>
+        <text x="790" y="196" fill="#fb7185" font-size="7.5" text-anchor="middle">迭代有上限 · 评分需客观证据验证</text>
 
         <!-- ==================== 3. State & Gate Layer ==================== -->
         <!-- Session State (接力流水) -->
         <rect x="50" y="260" width="240" height="50" rx="6" fill="#0f172a"/>
         <rect x="50" y="260" width="240" height="50" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
         <text x="170" y="282" fill="white" font-size="10" font-weight="600" text-anchor="middle">Session State 总线</text>
-        <text x="170" y="298" fill="#a78bfa" font-size="7.5" text-anchor="middle">强类型 output_key 结构化接力</text>
+        <text x="170" y="298" fill="#a78bfa" font-size="7.5" text-anchor="middle">output_key 状态接力；类型需校验</text>
 
         <!-- Parallel Gather Sync -->
         <rect x="360" y="260" width="240" height="50" rx="6" fill="#0f172a"/>
         <rect x="360" y="260" width="240" height="50" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
-        <text x="480" y="282" fill="white" font-size="10" font-weight="600" text-anchor="middle">Gather 屏障同步器</text>
-        <text x="480" y="298" fill="#a78bfa" font-size="7.5" text-anchor="middle">合并多源分析结果，消解长尾延迟</text>
+        <text x="480" y="282" fill="white" font-size="10" font-weight="600" text-anchor="middle">等待完成 + 显式汇总</text>
+        <text x="480" y="298" fill="#a78bfa" font-size="7.5" text-anchor="middle">后续节点汇总；长尾仍影响总耗时</text>
 
         <!-- Escalate Gate -->
         <rect x="670" y="260" width="240" height="50" rx="6" fill="#0f172a"/>
         <rect x="670" y="260" width="240" height="50" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
-        <text x="790" y="282" fill="white" font-size="10" font-weight="600" text-anchor="middle">Escalate 破环门禁</text>
-        <text x="790" y="298" fill="#fb7185" font-size="7.5" text-anchor="middle">tool_context.actions.escalate 判定</text>
+        <text x="790" y="282" fill="white" font-size="10" font-weight="600" text-anchor="middle">循环退出与批准检查</text>
+        <text x="790" y="298" fill="#fb7185" font-size="7.5" text-anchor="middle">退出后检查 approved；未通过停止</text>
 
         <!-- ==================== 4. Durable Execution Layer ==================== -->
         <rect x="30" y="360" width="900" height="90" rx="10" fill="rgba(251, 146, 60, 0.1)" stroke="#fb923c" stroke-width="1.2" stroke-dasharray="6,4"/>
@@ -192,7 +192,7 @@
         <rect x="50" y="390" width="860" height="48" rx="6" fill="#0f172a"/>
         <rect x="50" y="390" width="860" height="48" rx="6" fill="rgba(251, 146, 60, 0.3)" stroke="#fb923c" stroke-width="1.5"/>
         <text x="480" y="411" fill="white" font-size="11" font-weight="600" text-anchor="middle">Temporal 持久化引擎 (Workflow & Activity SDK)</text>
-        <text x="480" y="426" fill="#94a3b8" font-size="8.5" text-anchor="middle">长时任务透明保活 · 服务宕机无损自愈恢复 · 人工多级审批断点 (Signal / Query) · Saga 逆向事务补偿</text>
+        <text x="480" y="426" fill="#94a3b8" font-size="8.5" text-anchor="middle">可选长流程编排 · Workflow 历史重放 · Activity 重试需幂等 · 审批与补偿需实现</text>
       </svg>
     </div>
 
@@ -200,12 +200,12 @@
       <div class="card">
         <div class="card-header">
           <div class="card-dot cyan"></div>
-          <h3>主控权永不脱缰</h3>
+          <h3>工具式委派与返回</h3>
         </div>
         <ul>
           <li>• Supervisor 通过 AgentTool 调用专员智能体</li>
-          <li>• 子 Agent 在沙箱隔离环境中运行完单次任务即返回</li>
-          <li>• 主控始终保有会话主导权，杜绝 Handoff 模式下的迷航</li>
+          <li>• 子 Agent 返回任务结果；不构成安全沙箱</li>
+          <li>• 转接与自动返回机制按语言和 SDK 版本选择</li>
         </ul>
       </div>
 
@@ -227,8 +227,8 @@
           <h3>生产级长任务兜底</h3>
         </div>
         <ul>
-          <li>• 外层统一由 Temporal 状态机引擎保活</li>
-          <li>• 服务重启或网络中断时任务从最近检查点无缝恢复</li>
+          <li>• 长任务可选择 Temporal 等持久化编排</li>
+          <li>• 恢复 Workflow 进度；Activity 可能重新执行</li>
           <li>• 支持数小时甚至数天跨周期的人工审批挂起</li>
         </ul>
       </div>

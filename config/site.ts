@@ -33,6 +33,8 @@ export interface SiteConfig {
   twitterHandle: string
   socialLinks: SocialLink[]
   nav: NavItem[]
+  homeTitle: string
+  homeDescription: string
   homeLatestCount: number
   homeCategoryCount: number
   relatedPostCount: number
@@ -70,6 +72,8 @@ export const siteConfig: SiteConfig = {
     { label: '关于', to: '/about' },
     { label: '搜索', to: '/search' },
   ],
+  homeTitle: '软件工程与 AI 实践',
+  homeDescription: '记录系统设计、代码实现与 AI 应用中的技术取舍和实践经验。',
   homeLatestCount: 8,
   homeCategoryCount: 6,
   relatedPostCount: 3,

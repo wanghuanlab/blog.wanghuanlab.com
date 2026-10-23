@@ -10,10 +10,10 @@ usePageSeo({
 </script>
 
 <template>
-  <div class="container-narrow py-12">
+  <div class="container-narrow page-shell">
     <PageHeader
       title="全部文章"
-      :description="`共 ${posts.length} 篇文章，按发布时间倒序排列。`"
+      :description="`共 ${posts.length} 篇文章，从最近的记录开始，探索软件与系统的实践。`"
     >
       <TermChips
         v-if="categories.length"

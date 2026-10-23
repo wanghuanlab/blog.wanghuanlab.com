@@ -5151,15 +5151,15 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <text data-detail="fine" x="700" y="248" class="t-security" font-size="7" text-anchor="middle">循环模式</text>
         </g>
 
-        <g id="node-workflow-graph" data-node-id="workflow-graph" data-node-label="ADK 2.0+ Workflow Graph" tabindex="0" role="button" aria-label="聚焦ADK 2.0+ Workflow Graph，DAG 状态图 / 动态分支路由, 确定性工作流与编排原语 (Workflow Orchestration Primitives)" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="DAG 状态图 / 动态分支路由" data-node-tag="演进范式" data-node-context="确定性工作流与编排原语 (Workflow Orchestration Primitives)">
-          <title>ADK 2.0+ Workflow Graph · DAG 状态图 / 动态分支路由 · 确定性工作流与编排原语 (Workflow Orchestration Primitives) · 演进范式</title>
+        <g id="node-workflow-graph" data-node-id="workflow-graph" data-node-label="ADK 2.0+ Workflow Graph" tabindex="0" role="button" aria-label="聚焦ADK 2.0+ Workflow Graph，显式节点与边 / 条件路由, 确定性工作流与编排原语 (Workflow Orchestration Primitives)" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="显式节点与边 / 条件路由" data-node-tag="演进范式" data-node-context="确定性工作流与编排原语 (Workflow Orchestration Primitives)">
+          <title>ADK 2.0+ Workflow Graph · 显式节点与边 / 条件路由 · 确定性工作流与编排原语 (Workflow Orchestration Primitives) · 演进范式</title>
           <rect x="860" y="200" width="220" height="56" rx="6" class="c-mask"/>
           <rect x="860" y="200" width="220" height="56" rx="6" class="c-cloud" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(866 206) scale(0.6875)">
             <path d="M4.3 12.5h7.3a2.4 2.4 0 0 0 .2-4.8 4 4 0 0 0-7.5-1.3A3.1 3.1 0 0 0 4.3 12.5Z"/>
           </g>
           <text data-node-label="" data-detail-anchor="" x="970" y="226" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">ADK 2.0+ Workflow Graph</text>
-        <text data-detail="context" x="970" y="242" class="t-muted" font-size="9" text-anchor="middle">DAG 状态图 / 动态分支路由</text>
+        <text data-detail="context" x="970" y="242" class="t-muted" font-size="9" text-anchor="middle">显式节点与边 / 条件路由</text>
         <text data-detail="fine" x="970" y="248" class="t-cloud" font-size="7" text-anchor="middle">演进范式</text>
         </g>
 
@@ -5493,8 +5493,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           <h3>确定性流水 vs 概率性路由</h3>
         </div>
         <ul>
-          <li>Sequential、Parallel、Loop 属于确定性工作流智能体，不依赖 LLM 猜想下一步骤，杜绝死循环与编排漂移</li>
-          <li>ADK 2.0+ 将三大原语进一步抽象为一等公民 Graph Workflow，支持显式条件边（Conditional Edge）与检查点机制</li>
+          <li>Sequential、Parallel、Loop 由代码安排调度；子任务仍需预算、超时和验收约束</li>
+          <li>ADK 2.x 提供 Graph Workflow；图结构需校验，恢复取决于运行时与存储配置</li>
         </ul>
       </div>
 
@@ -5505,7 +5505,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         </div>
         <ul>
           <li>Sequential 通过 InvocationContext 共享 Session State，前序 Agent 的 output_key 自动写入上下文供后续直接消费</li>
-          <li>LoopAgent 强制配置 max_iterations 作为保底上限，子 Agent 通过 tool_context.actions.escalate 判定达标提前退出</li>
+          <li>LoopAgent 建议配置 max_iterations；escalate 仅退出循环，后续需单独检查批准状态</li>
         </ul>
       </div>
     </div>

@@ -10,23 +10,23 @@ defineProps<{
 <template>
   <nav
     v-if="previous || next"
-    class="grid gap-3 sm:grid-cols-2"
+    class="grid gap-6 sm:grid-cols-2 sm:gap-10"
     aria-label="上一篇与下一篇"
   >
     <NuxtLink
       v-if="previous"
       :to="previous.path"
       rel="prev"
-      class="group rounded-lg border border-border p-4 transition-colors hover:border-border-strong hover:bg-surface"
+      class="group block py-2"
     >
-      <span class="flex items-center gap-1.5 text-xs text-subtle">
+      <span class="flex items-center gap-1.5 text-[13px] text-subtle">
         <AppIcon
           name="arrow-left"
           :size="14"
         />
         上一篇
       </span>
-      <span class="mt-1.5 block font-medium leading-snug group-hover:text-accent">{{ previous.title }}</span>
+      <span class="mt-3 block font-medium leading-relaxed transition-colors group-hover:text-accent">{{ previous.title }}</span>
     </NuxtLink>
     <span
       v-else
@@ -36,16 +36,16 @@ defineProps<{
       v-if="next"
       :to="next.path"
       rel="next"
-      class="group rounded-lg border border-border p-4 text-right transition-colors hover:border-border-strong hover:bg-surface"
+      class="group block py-2 sm:text-right"
     >
-      <span class="flex items-center justify-end gap-1.5 text-xs text-subtle">
+      <span class="flex items-center gap-1.5 text-[13px] text-subtle sm:justify-end">
         下一篇
         <AppIcon
           name="arrow-right"
           :size="14"
         />
       </span>
-      <span class="mt-1.5 block font-medium leading-snug group-hover:text-accent">{{ next.title }}</span>
+      <span class="mt-3 block font-medium leading-relaxed transition-colors group-hover:text-accent">{{ next.title }}</span>
     </NuxtLink>
   </nav>
 </template>

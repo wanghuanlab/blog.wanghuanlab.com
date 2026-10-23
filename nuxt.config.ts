@@ -14,8 +14,8 @@ export default defineNuxtConfig({
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'author', content: siteConfig.author.name },
-        { name: 'theme-color', content: '#ffffff', media: '(prefers-color-scheme: light)' },
-        { name: 'theme-color', content: '#0d1117', media: '(prefers-color-scheme: dark)' },
+        { name: 'theme-color', content: '#fafbfd', media: '(prefers-color-scheme: light)' },
+        { name: 'theme-color', content: '#111923', media: '(prefers-color-scheme: dark)' },
       ],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },

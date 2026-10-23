@@ -14,6 +14,14 @@ export interface Term {
   count: number
 }
 
+/** Keep SSR and browser ordering identical regardless of their default locale or ICU version. */
+export function compareTermNames(a: Pick<Term, 'name'>, b: Pick<Term, 'name'>): number {
+  const first = a.name.toLowerCase()
+  const second = b.name.toLowerCase()
+  if (first !== second) return first < second ? -1 : 1
+  return a.name < b.name ? -1 : a.name > b.name ? 1 : 0
+}
+
 export interface ArchiveMonth<T> {
   month: number
   posts: T[]
@@ -40,7 +48,7 @@ function countTerms(names: string[]): Term[] {
     }
   }
 
-  return [...terms.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+  return [...terms.values()].sort((a, b) => b.count - a.count || compareTermNames(a, b))
 }
 
 export function collectCategories(posts: TaxonomyPost[]): Term[] {

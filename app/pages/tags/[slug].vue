@@ -6,7 +6,7 @@ const { data: posts } = await usePostList()
 const tag = computed(() => collectTags(posts.value).find(item => item.slug === slug))
 
 if (!tag.value) {
-  throw createError({ status: 404, statusText: 'Tag Not Found', fatal: true })
+  throw createError({ statusCode: 404, statusMessage: 'Tag Not Found', fatal: true })
 }
 
 const tagPosts = computed(() => filterByTag(posts.value, slug))
@@ -19,12 +19,18 @@ usePageSeo(() => ({
 </script>
 
 <template>
-  <div class="container-narrow py-12">
+  <div class="container-narrow page-shell">
     <PageHeader
-      eyebrow="Tag"
-      :title="`# ${tag!.name}`"
-      :description="`共 ${tagPosts.length} 篇文章。`"
-    />
+      :title="tag!.name"
+      :description="`关于 ${tag!.name} 的 ${tagPosts.length} 篇技术笔记，按发布时间倒序排列。`"
+    >
+      <NuxtLink
+        to="/tags"
+        class="text-link mt-5 inline-flex min-h-11 items-center gap-2 text-sm"
+      >
+        <span aria-hidden="true">←</span> 全部标签
+      </NuxtLink>
+    </PageHeader>
     <PostList :posts="tagPosts" />
   </div>
 </template>

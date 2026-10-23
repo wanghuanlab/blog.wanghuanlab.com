@@ -8,7 +8,8 @@ const props = defineProps<{
 const route = useRoute()
 const { open: openSearch } = useSearchDialog()
 
-const isNotFound = computed(() => props.error.status === 404)
+const statusCode = computed(() => Number(props.error.statusCode ?? props.error.status ?? 500))
+const isNotFound = computed(() => statusCode.value === 404)
 const title = computed(() => (isNotFound.value ? '页面不存在' : '页面出错了'))
 
 usePageSeo(() => ({
@@ -25,47 +26,83 @@ function goHome() {
 
 <template>
   <NuxtLayout>
-    <section class="container-narrow flex min-h-[60vh] flex-col justify-center py-20">
-      <p class="font-mono text-sm text-subtle">
-        {{ error.status }}
-      </p>
-      <h1 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-        {{ title }}
-      </h1>
-      <p class="mt-4 leading-relaxed text-muted">
+    <section class="container-narrow page-shell error-page">
+      <PageHeader
+        :title="title"
+      />
+      <p class="error-description">
         <template v-if="isNotFound">
-          你访问的地址 <code class="rounded bg-surface px-1.5 py-0.5 font-mono text-sm">{{ route.path }}</code> 不存在，可能已被移动或删除。
+          这个地址暂时没有内容，可能已被移动或删除。可以返回首页，或搜索你感兴趣的话题。
         </template>
         <template v-else>
           服务暂时出现问题，请稍后刷新重试。
         </template>
       </p>
-      <div class="mt-8 flex flex-wrap gap-3">
+      <p
+        v-if="isNotFound"
+        class="error-path"
+      >
+        <span class="sr-only">当前地址：</span>{{ route.path }}
+      </p>
+      <div class="error-actions">
         <button
           type="button"
-          class="inline-flex h-9 items-center rounded-md bg-fg px-4 text-sm font-medium text-bg transition-opacity hover:opacity-90"
+          class="button-primary"
           @click="goHome"
         >
           返回首页
         </button>
         <button
           type="button"
-          class="inline-flex h-9 items-center gap-2 rounded-md border border-border px-4 text-sm transition-colors hover:bg-surface"
+          class="button-secondary"
           @click="openSearch"
         >
-          <AppIcon
-            name="search"
-            :size="15"
-          />
           搜索文章
         </button>
         <NuxtLink
           to="/posts"
-          class="inline-flex h-9 items-center rounded-md px-3 text-sm text-muted transition-colors hover:text-fg"
+          class="text-link inline-flex min-h-11 items-center gap-2 px-2 text-sm"
         >
-          浏览全部文章 →
+          浏览全部文章 <span aria-hidden="true">→</span>
         </NuxtLink>
       </div>
     </section>
   </NuxtLayout>
 </template>
+
+<style scoped>
+.error-page {
+  display: flex;
+  min-height: 65vh;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.error-page :deep(.page-header) {
+  margin-bottom: 1.5rem;
+}
+
+.error-description {
+  max-width: 30rem;
+  color: var(--muted);
+  line-height: 1.9;
+}
+
+.error-path {
+  margin-top: 1rem;
+  color: var(--subtle);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.error-actions > :is(button, a) {
+  min-height: 2.75rem;
+}
+</style>

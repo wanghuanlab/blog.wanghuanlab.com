@@ -2,7 +2,7 @@
 const { data: page } = await useAsyncData('page:about', () => queryCollection('pages').path('/about').first())
 
 if (!page.value) {
-  throw createError({ status: 404, statusText: 'Page Not Found', fatal: true })
+  throw createError({ statusCode: 404, statusMessage: 'Page Not Found', fatal: true })
 }
 
 usePageSeo(() => ({
@@ -13,14 +13,33 @@ usePageSeo(() => ({
 </script>
 
 <template>
-  <div class="container-narrow py-12">
+  <div class="container-narrow page-shell">
     <PageHeader
       :title="page!.title"
       :description="page!.description"
     />
-    <ContentRenderer
-      :value="page!"
-      class="prose"
-    />
+    <article class="about-content">
+      <ContentRenderer
+        :value="page!"
+        class="prose"
+      />
+    </article>
   </div>
 </template>
+
+<style scoped>
+.about-content {
+  max-width: 43rem;
+}
+
+.about-content :deep(.prose > :first-child) {
+  margin-top: 0;
+}
+
+.about-content :deep(td a) {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+</style>

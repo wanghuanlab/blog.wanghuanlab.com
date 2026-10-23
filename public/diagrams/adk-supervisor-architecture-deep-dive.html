@@ -206,7 +206,7 @@
         <div class="pulse-dot"></div>
         <div>
           <h1>Google ADK · 企业级 Supervisor 模式架构深度拆解</h1>
-          <div class="subtitle">主控管控协同 · 业务 MCP 权责下沉 · 进程内 AgentTool / 分布式 A2A 协议治理体系</div>
+          <div class="subtitle">企业参考架构 · 按领域分配工具 · 本地委派 / 远程 A2A · 治理需配置</div>
         </div>
       </div>
       <div class="toolbar" id="toolbar">
@@ -219,7 +219,7 @@
       </div>
     </div>
 
-    <div class="diagram-card">
+    <div class="diagram-card diagram-container" data-diagram-type="architecture">
       <svg viewBox="0 0 1100 740" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -286,14 +286,14 @@
         <rect x="50" y="14" width="1000" height="38" rx="8" fill="#0f172a"/>
         <rect x="50" y="14" width="1000" height="38" rx="8" fill="rgba(8, 51, 68, 0.4)" stroke="#38bdf8" stroke-width="1.2"/>
         <text x="70" y="38" fill="#38bdf8" font-size="11" font-weight="700">CLIENT / INGRESS GATEWAY</text>
-        <text x="550" y="38" fill="#e2e8f0" font-size="10.5" font-weight="600" text-anchor="middle">业务入口通道 (REST API / WebSocket / SSE 双向流式传输 · 注入 InvocationContext)</text>
+        <text x="550" y="38" fill="#e2e8f0" font-size="10.5" font-weight="600" text-anchor="middle">业务入口 (REST / WebSocket / SSE 服务端事件流 · 创建 InvocationContext)</text>
         <text x="1030" y="38" fill="#94a3b8" font-size="9" text-anchor="end">Token &amp; 租户鉴权</text>
 
         <!-- Layer 2: Main Supervisor Core Container -->
         <rect x="50" y="70" width="1000" height="185" rx="10" fill="#0b1120"/>
         <rect x="50" y="70" width="1000" height="185" rx="10" fill="rgba(15, 23, 42, 0.75)" stroke="#38bdf8" stroke-width="1.5"/>
-        <text x="70" y="96" fill="#38bdf8" font-size="12" font-weight="700">SUPERVISOR AGENT CORE (主智能体 · 专注全局调度与控制权把控 · 严禁直连底层业务库)</text>
-        <text x="1030" y="96" fill="#38bdf8" font-size="9" text-anchor="end" font-weight="500">Separation of Concerns · Only Orchestration Tools</text>
+        <text x="70" y="96" fill="#38bdf8" font-size="12" font-weight="700">SUPERVISOR AGENT CORE (主智能体 · 全局调度与验收 · 按需配置受限工具)</text>
+        <text x="1030" y="96" fill="#38bdf8" font-size="9" text-anchor="end" font-weight="500">Separation of Concerns · Scoped Tools</text>
 
         <!-- Supervisor Sub-modules -->
         <!-- 1. Intent & Requirements -->
@@ -330,9 +330,9 @@
         <rect x="785" y="115" width="245" height="120" rx="6" fill="#0f172a"/>
         <rect x="785" y="115" width="245" height="120" rx="6" fill="rgba(6, 78, 59, 0.5)" stroke="#34d399" stroke-width="1.2"/>
         <text x="907" y="138" fill="#f8fafc" font-size="10.5" font-weight="600" text-anchor="middle">4. 控制权常驻与终态合成</text>
-        <text x="907" y="154" fill="#94a3b8" font-size="8" text-anchor="middle">控制权锁定 / 方案总装交付</text>
+        <text x="907" y="154" fill="#94a3b8" font-size="8" text-anchor="middle">结果回收 / 方案汇总交付</text>
         <line x1="800" y1="162" x2="1015" y2="162" stroke="#1e293b" stroke-width="1"/>
-        <text x="800" y="180" fill="#6ee7b7" font-size="8">• 控制权不灭：主模型主导对话</text>
+        <text x="800" y="180" fill="#6ee7b7" font-size="8">• 工具式委派：结果返回主控</text>
         <text x="800" y="196" fill="#6ee7b7" font-size="8">• 屏蔽专员万字中间日志 Token</text>
         <text x="800" y="212" fill="#6ee7b7" font-size="8">• 统一向终端用户输出端到端答卷</text>
 
@@ -341,8 +341,8 @@
         <rect x="50" y="280" width="1000" height="52" rx="8" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.3"/>
         <text x="70" y="302" fill="#c4b5fd" font-size="11" font-weight="700">AGENT DISPATCH &amp; COLLABORATION HIGHWAY (智能体调度与协作总线)</text>
         <text x="70" y="321" fill="#94a3b8" font-size="8.5">
-          <tspan fill="#34d399" font-weight="600">[单进程/本地形态]</tspan> 依托 Google ADK <tspan fill="#34d399">AgentTool</tspan> 高阶函数沙箱调用（零网络损耗）
-          <tspan dx="15" fill="#a78bfa" font-weight="600">[分布式/微服务形态]</tspan> 依托 <tspan fill="#a78bfa">A2A Protocol</tspan> 契约总线（gRPC / JSON-RPC / Task Envelope / 异步事件订阅）
+          <tspan fill="#34d399" font-weight="600">[单进程/本地形态]</tspan> 依托 Google ADK <tspan fill="#34d399">AgentTool</tspan> 工具式调用（减少 Agent RPC）
+          <tspan dx="15" fill="#a78bfa" font-weight="600">[分布式/微服务形态]</tspan> 依托 <tspan fill="#a78bfa">A2A Protocol</tspan> 互操作协议（消息 / 任务 / 产物 / 流式更新）
         </text>
 
         <!-- Layer 4: Specialized Worker Sub-Agents (Business Domain) -->
@@ -473,22 +473,22 @@
       <div class="card">
         <div class="card-header">
           <div class="card-dot cyan"></div>
-          <h3>主控专注协调，严禁越俎代庖</h3>
+          <h3>主控职责与工具范围</h3>
         </div>
         <ul>
-          <li>• <strong>指挥官定位</strong>：主控 Agent（Supervisor）负责意图识别、全局任务 DAG 规划与终态验收，绝不直接挂载业务写操作工具。</li>
-          <li>• <strong>注意力保护</strong>：主控若挂载大量业务 MCP，大量 Tool Schema 会瞬间挤占 Context Window，造成注意力稀释（Attention Dilution）。</li>
+          <li>• <strong>指挥官定位</strong>：主控负责规划与验收；可按需保留少量全局查询及治理工具。</li>
+          <li>• <strong>注意力保护</strong>：工具过多会增加上下文与选择成本，可按领域拆分并测量效果。</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot amber"></div>
-          <h3>业务 MCP 工具必须权责下沉</h3>
+          <h3>复杂系统优先下沉领域工具</h3>
         </div>
         <ul>
           <li>• <strong>权限最小化原则（PoLP）</strong>：Git/CI 挂载给研发专员，数据库与数据湖挂载给分析专员，代码扫描挂载给审查专员。</li>
-          <li>• <strong>纵深防御防越狱</strong>：即使主控遭遇用户 Prompt Injection 注入攻击，由于主控本身没有写库和发布工具，无法直接造成破坏。</li>
+          <li>• <strong>纵深防御防越狱</strong>：工具下沉不阻断间接调用风险；服务端鉴权、参数校验与审批仍需落实。</li>
         </ul>
       </div>
 
@@ -498,15 +498,15 @@
           <h3>进程内 AgentTool 与分布式 A2A</h3>
         </div>
         <ul>
-          <li>• <strong>本地单进程</strong>：通过 Google ADK <code>AgentTool</code> 将专员包装为内存高阶函数，零网络损耗，控制权常驻主控。</li>
-          <li>• <strong>分布式微服务</strong>：跨网络、跨容器调度通过 <code>A2A Protocol</code>（基于 gRPC/JSON-RPC 的 Task Envelope 契约）解耦伸缩。</li>
+          <li>• <strong>本地单进程</strong>：通过 Google ADK <code>AgentTool</code> 进行工具式委派；模型与工具访问仍可能走网络。</li>
+          <li>• <strong>分布式微服务</strong>：跨网络、跨容器调度通过 <code>A2A Protocol</code>实现远程消息、任务状态与产物互操作。</li>
         </ul>
       </div>
     </div>
 
     <div class="footer">
-      <div>Enterprise Architecture · Google ADK Multi-Agent Orchestration Specification</div>
-      <div>Designed with architecture-diagram skill · Production Ready</div>
+      <div>Enterprise Architecture · Google ADK Multi-Agent Reference Architecture</div>
+      <div>参考设计 · 按版本验证 · 治理能力需集成</div>
     </div>
   </div>
 

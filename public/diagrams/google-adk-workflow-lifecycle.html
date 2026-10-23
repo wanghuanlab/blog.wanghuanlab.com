@@ -5048,8 +5048,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <path data-edge-from="step_gather" data-edge-to="state_sync" data-edge-key="4" data-edge-id="e5" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="542,86;542,70;864,70;864,430;542,430;542,414" d="M 542 86 L 542 70 L 864 70 L 864 430 L 542 430 L 542 414" class="a-dashed" data-animate="edge" style="--step:11" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
         <path data-edge-from="step_gather" data-edge-to="worker_critic" data-edge-label="提交评审" data-edge-key="5" data-edge-id="e6" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="549,154;549,246;610,246" d="M 549 154 L 549 246 L 610 246" class="a-emphasis" data-animate="edge" style="--step:3" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <path data-edge-from="worker_critic" data-edge-to="step_gather" data-edge-label="未达标打回" data-edge-key="6" data-edge-id="e7" data-composition-routing="workflow-v2-auto" data-edge-role="return" data-composition-points="714,253;730,253;730,172;566,172;566,154" d="M 714 253 L 730 253 L 730 172 L 566 172 L 566 154" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <path data-edge-from="worker_critic" data-edge-to="gate_escalate" data-edge-label="质检通过" data-edge-key="7" data-edge-id="e8" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="662,287;662,380;739.6,380" d="M 662 287 L 662 380 L 739.6 380" class="a-emphasis" data-animate="edge" style="--step:4" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="gate_escalate" data-edge-to="step_final" data-edge-label="破环放行" data-edge-key="8" data-edge-id="e9" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="791.6,346;791.6,154" d="M 791.6 346 L 791.6 154" class="a-emphasis" data-animate="edge" style="--step:5" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="worker_critic" data-edge-to="gate_escalate" data-edge-label="退出后检查" data-edge-key="7" data-edge-id="e8" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="662,287;662,380;739.6,380" d="M 662 287 L 662 380 L 739.6 380" class="a-emphasis" data-animate="edge" style="--step:4" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="gate_escalate" data-edge-to="step_final" data-edge-label="批准通过" data-edge-key="8" data-edge-id="e9" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="791.6,346;791.6,154" d="M 791.6 346 L 791.6 154" class="a-emphasis" data-animate="edge" style="--step:5" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
 
         <!-- Nodes -->
         <g id="node-task_in" data-node-id="task_in" data-node-label="任务请求摄入" tabindex="0" role="button" aria-label="聚焦任务请求摄入，Task / Prompt, SequentialAgent 顶层流水 › 阶段一 · 任务摄入与并发采集" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="Task / Prompt" data-node-tag="输入" data-node-context="SequentialAgent 顶层流水 › 阶段一 · 任务摄入与并发采集">
@@ -5091,15 +5091,15 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <text data-detail="fine" x="542" y="144.4" class="t-backend" font-size="7" text-anchor="middle">初稿汇总</text>
         </g>
 
-        <g id="node-step_final" data-node-id="step_final" data-node-label="步骤 4: 成果签发" tabindex="0" role="button" aria-label="聚焦步骤 4: 成果签发，最终交付归档, SequentialAgent 顶层流水 › 阶段三 · 门禁放行与终态签发" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="最终交付归档" data-node-tag="交付终态" data-node-context="SequentialAgent 顶层流水 › 阶段三 · 门禁放行与终态签发">
-          <title>步骤 4: 成果签发 · 最终交付归档 · SequentialAgent 顶层流水 › 阶段三 · 门禁放行与终态签发 · 交付终态</title>
+        <g id="node-step_final" data-node-id="step_final" data-node-label="步骤 4: 交付报告" tabindex="0" role="button" aria-label="聚焦步骤 4: 交付报告，通过检查后生成报告, SequentialAgent 顶层流水 › 阶段三 · 门禁放行与终态签发" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="通过检查后生成报告" data-node-tag="交付终态" data-node-context="SequentialAgent 顶层流水 › 阶段三 · 门禁放行与终态签发">
+          <title>步骤 4: 交付报告 · 通过检查后生成报告 · SequentialAgent 顶层流水 › 阶段三 · 门禁放行与终态签发 · 交付终态</title>
           <rect x="739.6" y="86" width="104" height="68" rx="6" class="c-mask"/>
           <rect x="739.6" y="86" width="104" height="68" rx="6" class="c-cloud" data-animate="node" style="--step:6" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(745.6 92) scale(0.6875)">
             <path d="M4.3 12.5h7.3a2.4 2.4 0 0 0 .2-4.8 4 4 0 0 0-7.5-1.3A3.1 3.1 0 0 0 4.3 12.5Z"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="791.6" y="117" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">步骤 4: 成果签发</text>
-          <text data-detail="context" x="791.6" y="131.6" class="t-muted" font-size="8" text-anchor="middle">最终交付归档</text>
+          <text data-node-label="" data-detail-anchor="" x="791.6" y="117" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">步骤 4: 交付报告</text>
+          <text data-detail="context" x="791.6" y="131.6" class="t-muted" font-size="8" text-anchor="middle">通过检查后生成报告</text>
         <text data-detail="fine" x="791.6" y="144.4" class="t-cloud" font-size="7" text-anchor="middle">交付终态</text>
         </g>
 
@@ -5141,8 +5141,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <text data-detail="fine" x="100" y="402" class="t-database" font-size="7" text-anchor="middle">初始化</text>
         </g>
 
-        <g id="node-state_sync" data-node-id="state_sync" data-node-label="写入会话状态" tabindex="0" role="button" aria-label="聚焦写入会话状态，output_key 数据接力, 会话状态与破环门禁 (State &amp; Gate) › 阶段二 · 方案汇聚与迭代打磨" aria-pressed="false" data-node-kind="database" data-node-sublabel="output_key 数据接力" data-node-tag="状态持久化" data-node-context="会话状态与破环门禁 (State &amp; Gate) › 阶段二 · 方案汇聚与迭代打磨">
-          <title>写入会话状态 · output_key 数据接力 · 会话状态与破环门禁 (State &amp; Gate) › 阶段二 · 方案汇聚与迭代打磨 · 状态持久化</title>
+        <g id="node-state_sync" data-node-id="state_sync" data-node-label="写入会话状态" tabindex="0" role="button" aria-label="聚焦写入会话状态，output_key 数据接力, 会话状态与破环门禁 (State &amp; Gate) › 阶段二 · 方案汇聚与迭代打磨" aria-pressed="false" data-node-kind="database" data-node-sublabel="output_key 数据接力" data-node-tag="状态更新" data-node-context="会话状态与破环门禁 (State &amp; Gate) › 阶段二 · 方案汇聚与迭代打磨">
+          <title>写入会话状态 · output_key 数据接力 · 会话状态与破环门禁 (State &amp; Gate) › 阶段二 · 方案汇聚与迭代打磨 · 状态更新</title>
           <rect x="490" y="346" width="104" height="68" rx="6" class="c-mask"/>
           <rect x="490" y="346" width="104" height="68" rx="6" class="c-database" data-animate="node" style="--step:12" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(496 352) scale(0.6875)">
@@ -5151,20 +5151,20 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           </g>
           <text data-node-label="" data-detail-anchor="" x="548.6" y="367" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">写入会话状态</text>
           <text data-detail="context" x="542" y="384" class="t-muted" font-size="8" text-anchor="middle">output_key 数据接力</text>
-        <text data-detail="fine" x="542" y="402" class="t-database" font-size="7" text-anchor="middle">状态持久化</text>
+        <text data-detail="fine" x="542" y="402" class="t-database" font-size="7" text-anchor="middle">状态更新</text>
         </g>
 
-        <g id="node-gate_escalate" data-node-id="gate_escalate" data-node-label="Escalate 门禁" tabindex="0" role="button" aria-label="聚焦Escalate 门禁，破环退出判定, 会话状态与破环门禁 (State &amp; Gate) › 阶段三 · 门禁放行与终态签发" aria-pressed="false" data-node-kind="security" data-node-sublabel="破环退出判定" data-node-tag="退出判定" data-node-context="会话状态与破环门禁 (State &amp; Gate) › 阶段三 · 门禁放行与终态签发">
-          <title>Escalate 门禁 · 破环退出判定 · 会话状态与破环门禁 (State &amp; Gate) › 阶段三 · 门禁放行与终态签发 · 退出判定</title>
+        <g id="node-gate_escalate" data-node-id="gate_escalate" data-node-label="批准状态检查" tabindex="0" role="button" aria-label="聚焦批准状态检查，未批准停止 / 通过继续, 会话状态与破环门禁 (State &amp; Gate) › 阶段三 · 门禁放行与终态签发" aria-pressed="false" data-node-kind="security" data-node-sublabel="未批准停止 / 通过继续" data-node-tag="批准判定" data-node-context="会话状态与破环门禁 (State &amp; Gate) › 阶段三 · 门禁放行与终态签发">
+          <title>批准状态检查 · 未批准停止 / 通过继续 · 会话状态与破环门禁 (State &amp; Gate) › 阶段三 · 门禁放行与终态签发 · 批准判定</title>
           <rect x="739.6" y="346" width="104" height="68" rx="6" class="c-mask"/>
           <rect x="739.6" y="346" width="104" height="68" rx="6" class="c-security" data-animate="node" style="--step:5" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(745.6 352) scale(0.6875)">
             <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
             <path d="m5.8 8 1.5 1.5 3-3"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="791.6" y="378.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Escalate 门禁</text>
-          <text data-detail="context" x="791.6" y="393.1" class="t-muted" font-size="8" text-anchor="middle">破环退出判定</text>
-        <text data-detail="fine" x="791.6" y="405.9" class="t-security" font-size="7" text-anchor="middle">退出判定</text>
+          <text data-node-label="" data-detail-anchor="" x="791.6" y="378.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">批准状态检查</text>
+          <text data-detail="context" x="791.6" y="393.1" class="t-muted" font-size="8" text-anchor="middle">未批准停止 / 通过继续</text>
+        <text data-detail="fine" x="791.6" y="405.9" class="t-security" font-size="7" text-anchor="middle">批准判定</text>
         </g>
 
         <!-- Edge labels -->
@@ -5190,13 +5190,13 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           <rect x="619" y="152" width="58" height="14" rx="3" class="c-mask"/>
           <text x="648" y="162" class="t-edge-security" font-size="8" text-anchor="middle">未达标打回</text>
         </g>
-        <g data-detail="context" data-edge-from="worker_critic" data-edge-to="gate_escalate" data-edge-label="质检通过" data-edge-key="7" data-edge-id="e8">
+        <g data-detail="context" data-edge-from="worker_critic" data-edge-to="gate_escalate" data-edge-label="退出后检查" data-edge-key="7" data-edge-id="e8">
           <rect x="676.5999999999999" y="360" width="48.4" height="14" rx="3" class="c-mask"/>
-          <text x="700.8" y="370" class="t-edge-emphasis" font-size="8" text-anchor="middle">质检通过</text>
+          <text x="700.8" y="370" class="t-edge-emphasis" font-size="8" text-anchor="middle">退出后检查</text>
         </g>
-        <g data-detail="context" data-edge-from="gate_escalate" data-edge-to="step_final" data-edge-label="破环放行" data-edge-key="8" data-edge-id="e9">
+        <g data-detail="context" data-edge-from="gate_escalate" data-edge-to="step_final" data-edge-label="批准通过" data-edge-key="8" data-edge-id="e9">
           <rect x="767.4" y="240" width="48.4" height="14" rx="3" class="c-mask"/>
-          <text x="791.6" y="250" class="t-edge-emphasis" font-size="8" text-anchor="middle">破环放行</text>
+          <text x="791.6" y="250" class="t-edge-emphasis" font-size="8" text-anchor="middle">批准通过</text>
         </g>
 
         <!-- Legend -->
@@ -5406,7 +5406,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         </div>
         <ul>
           <li>SequentialAgent 担任顶层骨干，将 ParallelAgent 与 LoopAgent 依次串接为高度确定的业务流水线</li>
-          <li>各阶段产物通过 InvocationContext 中的 output_key 结构化持久化传递，杜绝信息在长链中丢失</li>
+          <li>各阶段通过 output_key 写入 Session State；结构校验与持久化服务需单独配置</li>
         </ul>
       </div>
 
@@ -5416,8 +5416,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           <h3>LoopAgent 破环防线</h3>
         </div>
         <ul>
-          <li>Loop 内部严格设置 max_iterations 兜底（建议 3~5 次），杜绝死循环与模型自激振荡</li>
-          <li>Critic 节点调用 exit_loop 工具设置 tool_context.actions.escalate = True 即可优雅中断循环并向下流转</li>
+          <li>Loop 设置迭代上限；次数耗尽只结束循环，不代表批准</li>
+          <li>代码根据审查结果设置退出信号；循环后检查 approved，未通过则停止下游</li>
         </ul>
       </div>
     </div>

@@ -73,27 +73,31 @@ useHead({
 </script>
 
 <template>
-  <div class="container-page py-10 sm:py-14">
-    <div class="xl:grid xl:grid-cols-[minmax(0,1fr)_14rem] xl:gap-12">
+  <div class="container-page article-page">
+    <div class="xl:grid xl:grid-cols-[minmax(0,1fr)_14rem] xl:gap-14">
       <article class="mx-auto w-full min-w-0 max-w-[760px]">
-        <header class="mb-10">
+        <header class="article-header">
           <NuxtLink
-            :to="`/categories/${slugify(article.category)}`"
-            class="font-mono text-xs uppercase tracking-wider text-accent hover:underline"
+            to="/posts"
+            class="article-back"
           >
-            {{ article.category }}
+            <AppIcon
+              name="arrow-left"
+              :size="15"
+            />
+            全部文章
           </NuxtLink>
-          <h1 class="mt-3 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+          <h1 class="article-title">
             {{ article.title }}
           </h1>
           <p
             v-if="article.description"
-            class="mt-4 text-lg leading-relaxed text-muted"
+            class="article-description"
           >
             {{ article.description }}
           </p>
           <PostMeta
-            class="mt-5"
+            class="mt-6"
             :date="article.date"
             :updated="article.updated"
             :category="article.category"
@@ -108,15 +112,15 @@ useHead({
         <details
           v-if="tocLinks.length"
           ref="mobileToc"
-          class="group mb-10 rounded-lg border border-border xl:hidden"
+          class="group mb-10 rounded bg-surface px-4 xl:hidden"
         >
-          <summary class="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
+          <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between py-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
             <span class="inline-flex items-center gap-2">
               <AppIcon
                 name="list"
                 :size="16"
               />
-              目录
+              文章目录
             </span>
             <AppIcon
               name="chevron-down"
@@ -124,7 +128,7 @@ useHead({
               class="text-subtle transition-transform group-open:rotate-180"
             />
           </summary>
-          <div class="max-h-[50vh] overflow-y-auto border-t border-border px-4 py-3">
+          <div class="max-h-[50vh] overflow-y-auto pb-4 pt-1">
             <PostToc
               :links="tocLinks"
               :active-id="activeId"
@@ -138,7 +142,7 @@ useHead({
           class="prose"
         />
 
-        <footer class="mt-16 space-y-10 border-t border-border pt-8">
+        <footer class="mt-16 space-y-12 pt-4 sm:mt-20">
           <PostPager
             :previous="previous"
             :next="next"
@@ -152,9 +156,9 @@ useHead({
         class="hidden xl:block"
         aria-label="文章目录"
       >
-        <div class="sticky top-[calc(var(--header-h)+2.5rem)] max-h-[calc(100dvh-var(--header-h)-4rem)] overflow-y-auto">
-          <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-subtle">
-            目录
+        <div class="sticky top-[calc(var(--header-h)+2rem)] max-h-[calc(100dvh-var(--header-h)-4rem)] overflow-y-auto overscroll-contain pr-2">
+          <p class="mb-4 text-[13px] font-medium text-subtle">
+            本文目录
           </p>
           <PostToc
             :links="tocLinks"
@@ -165,3 +169,61 @@ useHead({
     </div>
   </div>
 </template>
+
+<style scoped>
+.article-page {
+  padding-top: 2rem;
+  padding-bottom: 5rem;
+}
+
+.article-header {
+  margin-bottom: 2.75rem;
+}
+
+.article-back {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  transition: color 150ms;
+}
+
+.article-back:hover {
+  color: var(--accent);
+}
+
+.article-title {
+  margin-top: 1rem;
+  overflow-wrap: anywhere;
+  color: var(--fg);
+  font-size: clamp(2rem, 3.6vw, 3rem);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+
+.article-description {
+  margin-top: 1.5rem;
+  color: var(--muted);
+  font-size: 1.0625rem;
+  line-height: 1.85;
+}
+
+@media (min-width: 768px) {
+  .article-page {
+    padding-top: 3rem;
+    padding-bottom: 7rem;
+  }
+
+  .article-header {
+    margin-bottom: 3.5rem;
+  }
+
+  .article-description {
+    font-size: 1.125rem;
+  }
+}
+</style>

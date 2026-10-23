@@ -8,7 +8,7 @@ const { data: posts } = await usePostList()
 const category = computed(() => collectCategories(posts.value).find(item => item.slug === slug))
 
 if (!category.value) {
-  throw createError({ status: 404, statusText: 'Category Not Found', fatal: true })
+  throw createError({ statusCode: 404, statusMessage: 'Category Not Found', fatal: true })
 }
 
 const categoryPosts = computed(() => filterByCategory(posts.value, slug))
@@ -23,12 +23,18 @@ usePageSeo(() => ({
 </script>
 
 <template>
-  <div class="container-narrow py-12">
+  <div class="container-narrow page-shell">
     <PageHeader
-      eyebrow="Category"
       :title="category!.name"
       :description="`${description} 共 ${categoryPosts.length} 篇。`"
-    />
+    >
+      <NuxtLink
+        to="/categories"
+        class="text-link mt-5 inline-flex min-h-11 items-center gap-2 text-sm"
+      >
+        <span aria-hidden="true">←</span> 全部分类
+      </NuxtLink>
+    </PageHeader>
     <PostList :posts="categoryPosts" />
   </div>
 </template>
