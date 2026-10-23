@@ -197,20 +197,70 @@ Supervisor 模式并非单一的算法，而是一套**分工高度解耦的指�
 
 ### 5.2 整体技术架构全景图
 
-下图完整展示了企业级 Supervisor 智能体系统的技术架构，涵盖接入层、主控中枢、双通信协议总线、专业领域智能体集群，以及支撑生产级高可用的底层基础设施：
+下图完整展示了企业级 Supervisor 智能体系统的技术架构，重点展现了**“主控专注全局调度管控、业务 MCP 权责下沉专员、本地 AgentTool 与分布式 A2A 双模通信”**的工程规范：
 
 ::archify-diagram{src="/diagrams/adk-supervisor-architecture-deep-dive.html" title="Google ADK 企业级 Supervisor 模式技术架构全景图" height="600"}
 ::
 
 在这套架构中，系统自顶向下由五大核心平面组成：
 
-1. **接入网关层（Client & Ingress Gateway）**：接收用户 Prompt 或企业触发事件，初始化全局唯一的调用上下文 `InvocationContext`，支持 REST、WebSocket 与 SSE 双向流式交互。
-2. **主控中枢层（Supervisor Controller Core）**：系统的中央大脑，集成意图解析、动态任务拆解（ReAct Planner）、多源冲突裁决以及独占的上下文管家。
-3. **双通信协议总线（Dual-Protocol Highway）**：
-   * **A2A（Agent-to-Agent）协议**：负责智能体与智能体之间的强契约调用、状态流转与事件推送。
-   * **MCP（Model Context Protocol）网关**：负责智能体标准化挂载企业外部异构数据源、代码仓与微服务 API。
-4. **领域专员与工具执行层（Specialized Units）**：左翼为聚焦业务职能的子智能体矩阵（Planner、Executor、Reviewer、Analyst）；右翼为基于 MCP 协议挂载的标准外挂工具。
-5. **企业级支撑服务底座（Enterprise Supporting Infrastructure）**：由记忆存储、服务注册发现、Temporal 状态持久化、全链路观测审计与 HITL 人机协同五大支柱构成，托底整个系统的工业级可用性。
+1. **接入网关层（Client & Ingress Gateway）**：接收用户 Prompt 或企业触发事件，初始化全局调用上下文 `InvocationContext`，支持 REST、WebSocket 与 SSE 双向流式交互。
+2. **主控中枢层（Supervisor Controller Core）**：系统的中央大脑，专职负责意图解析、动态任务拆解（ReAct Planner）、多源冲突裁决与全局控制权锁定。**主控严禁直接挂载底层业务读写工具**。
+3. **智能体调度与协作总线（Dispatch & Collaboration Highway）**：
+   * **本地/单进程形态**：通过 Google ADK 原生 **`AgentTool`** 高阶沙箱进行内存级直接调用，零网络损耗，控制权永不脱缰。
+   * **分布式/跨服务形态**：通过 **`A2A（Agent-to-Agent）`** 协议总线进行跨进程、跨容器的异步契约通信（基于 gRPC / JSON-RPC / Task Envelope）。
+4. **专业子智能体与业务 MCP 工具下沉层（Specialized Units & Domain MCPs）**：
+   * **专员集群**：Planner（架构方案）、Executor（研发代码）、Reviewer（质检把关）、Analyst（数据洞察）。
+   * **业务 MCP 下沉**：每个子智能体**专属性挂载**自己领域的 MCP Server（如研发专员独占 Git/CI MCP，分析专员独占 Database MCP），主控绝不越权兼任。
+5. **企业级支撑服务底座（Enterprise Supporting Infrastructure）**：记忆中心、注册发现、Temporal 状态持久化、OTel 可观测与安全围栏、HITL 人工通道五大支柱共同托底系统高可用。
+
+---
+
+### 5.2.1 架构深度辨析：主控该不该挂载业务 MCP？主子通信机制究竟为何？
+
+在构建复杂多智能体系统时，许多工程师容易在通信边界和工具划分上陷入误区。理解以下两大设计决策，是系统从“实验性玩具”走向“工业级生产”的关键分水岭：
+
+#### 辨析一：主 Agent 直接通过 A2A 和子 Agent 交互吗？
+
+**结论**：在物理架构上，主 Agent 与子 Agent 的交互存在**本地进程内**与**分布式跨网络**两层形态，切忌一刀切：
+
+1. **单体/单进程运行（In-Process MAS）**：
+   * **交互方式**：直接使用 Google ADK 的 **`AgentTool`**。
+   * **运行原理**：主 Agent 将子 Agent 包装为一个内存中的本地可调用函数（Tool）。主控以参数形式传入任务，子 Agent 在局部沙箱线程/协程中执行完毕，返回结构化 JSON 或结果摘要。
+   * **优势**：**零网络开销、微秒级延迟、强类型对象直接传递**。在单体应用或开发调试期，绝无需徒增一套 RPC 网络通信中间件。
+2. **分布式/微服务协同（Distributed MAS）**：
+   * **交互方式**：采用标准的 **A2A（Agent-to-Agent）协议**。
+   * **适用场景**：当专员智能体需要独立弹性伸缩（如 Python 算法 Agent、C++ 高频风控 Agent、Java 核心业务 Agent 运行在不同的 K8s Pod 甚至跨机房跨组织时）。
+   * **运行原理**：基于标准化 Task Envelope（包含 TraceID、AuthToken、Deadline），通过 gRPC、JSON-RPC 或 SSE 实现长连接调用、中间思考过程流式推送与异步事件通知。
+
+#### 辨析二：主 Agent 该不该直接通过 MCP 调用业务服务？
+
+**结论**：**坚决反对主 Agent 直接挂载具体的业务 MCP 工具！业务 MCP 必须严格下沉给对应的专业子 Agent。**
+
+许多初学者常犯的错误，是把数据库写入、Git 提交、第三方支付 API 等所有 MCP 工具统统挂载到 Supervisor 上。这种“全能大包大揽”的主控会带来四大灾难：
+
+1. **Prompt 污染与注意力稀释（Attention Dilution）**：
+   大模型的 Context Window 空间与注意力分布是极其宝贵的资源。每一个 MCP 工具都会注入详尽的描述词（Description）与复杂的参数 JSON Schema。如果主控挂载了数十个具体业务工具，主模型的上下文会被海量底层细节填满，**直接削弱其对顶层目标分解、逻辑编排与质量判断的核心注意力**。
+2. **违背最小权限原则（Principle of Least Privilege, PoLP）与防越狱**：
+   Supervisor 是直接面向终端用户的交互入口。若 Supervisor 身兼写库、删表、转账等高危 MCP 工具，一旦遭遇恶意用户的 **Prompt Injection（提示词注入攻击）**，攻击者便可直接操控主控执行越权破坏。将高危工具隔离在后方子 Agent 的沙箱内，能天然形成纵深防御体系。
+3. **职责内聚与指挥官定位（Separation of Concerns）**：
+   在组织架构中，CEO（Supervisor）负责制定战略与考核产出，绝不应该亲自下场写 SQL 或跑编译命令。专业的事交给专员做：
+   * **Executor Agent** 手持 **Git / CI MCP**；
+   * **Analyst Agent** 手持 **Database / Data Lake MCP**；
+   * **Reviewer Agent** 手持 **SonarQube / Security Scanner MCP**；
+   * **Supervisor Agent** 只持 **“智能体调度工具”** 与 **“流程管控工具”**。
+
+#### 企业级工具分级归属管理矩阵
+
+| 工具分类 | 工具归属组件 | 典型工具形态 | 权限级别 | 核心职责 |
+| :--- | :--- | :--- | :---: | :--- |
+| **协同调度工具** | **Supervisor（主控独占）** | `AgentTool` (Planner/Executor/Reviewer)、A2A Client | 高（管控级） | 派发子任务、收集专员结论、推进业务 DAG 拓扑 |
+| **流程治理工具** | **Supervisor（主控独占）** | HITL 审批挂起 (`actions.escalate`)、Temporal 状态打点 | 高（管控级） | 高危节点阻断待批、长流程持久化快照 |
+| **研发执行 MCP** | **Executor Sub-Agent** | Git Branch/Commit、CI Pipeline Trigger、容器执行 | 中/高（领域级） | 专注代码生成、编译运行与研发交付 |
+| **数据分析 MCP** | **Analyst Sub-Agent** | PostgreSQL 只读查询、Google Search API、数据清洗 | 中（只读/受控） | 专注异构数据抓取、日志聚合与统计度量 |
+| **质量审查 MCP** | **Reviewer Sub-Agent** | SonarQube 代码扫描、CVE 依赖审计、单测报告生成 | 低/只读（检测级） | 专注安全漏洞筛查与代码规范打分 |
+
+---
 
 ---
 
@@ -347,42 +397,45 @@ supervisor = LlmAgent(
 
 ### 5.5 协议与通信双翼：A2A 协同协议与 MCP 工具网关的融合
 
-在现代企业架构中，智能体系统既需要与“其他智能体”打交道，又需要与“现实系统”打交道。Google ADK 生态通过 **A2A** 与 **MCP** 双协议体系实现了清晰的职责分工：
+在现代企业架构中，系统通过 **A2A（智能体间软认知协同）** 与 **MCP（外部物理工具硬能力执行）** 构建了权责分明、上下贯通的垂直调用链：
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                        Supervisor 决策调度核心                         │
-└───────────────────┬────────────────────────────────┬───────────────────┘
-                    │                                │
-        A2A Protocol (Agent 间协同)       MCP Protocol (外部工具集成)
-                    │                                │
-┌───────────────────▼──────────────────┐ ┌───────────▼───────────────────┐
-│     Specialized Sub-Agents 集群      │ │       MCP Server 外部工具生态    │
-│  Planner · Executor · Reviewer · ... │ │  PostgreSQL · Git · Redis · K8s │
-└──────────────────────────────────────┘ └─────────────────────────────────┘
+Supervisor（总控大脑 · 统筹规划与验收）
+   │
+   ├─► [本地单进程模式] ──> Google ADK AgentTool 沙箱高阶调用
+   └─► [分布式微服务]  ──> A2A Protocol 协同通信总线 (Task Envelope / 事件回调)
+          │
+          ▼
+   Sub-Agents（专业子智能体：Executor / Reviewer / Analyst ...）
+          │
+          └─► [MCP 统一工具协议] ──> 专员持有的业务 MCP Server
+                 │
+                 ├─► MCP Git / CI (研发专用)
+                 ├─► MCP Database (数据分析专用)
+                 └─► MCP Security Scanner (代码审计专用)
 ```
 
-#### 1. A2A（Agent-to-Agent）协同协议
+#### 1. A2A（Agent-to-Agent）协同协议：智能体间的“通用语言”
 
-* **定位**：解决**智能体与智能体之间（Agent-to-Agent）**的认知级通信。
+* **定位**：解决**智能体与智能体之间（Agent-to-Agent）**的高层认知级协作通信。
 * **核心内容**：
   * **Task Envelope 结构封装**：包含任务 TraceID、父会话引用、安全鉴权凭据与执行超时 Deadline。
   * **认知流式反馈**：子 Agent 在长时间推理时，可通过 A2A 事件总线向上层 Supervisor 推送心跳与进度更新（如 `step: 3/5, progress: 60%`）。
   * **仲裁与中断协议**：当专员遇到不可解异常或死循环嫌疑时，通过 A2A 标准的 `EscalateAction` 向上层主控交出异常堆栈。
 
-#### 2. MCP（Model Context Protocol）工具网关
+#### 2. MCP（Model Context Protocol）工具网关：智能体与现实系统的“插座”
 
-* **定位**：解决**智能体与外部客观软件系统**之间的互通，由 Anthropic 提出并迅速成为业界开放事实标准。
+* **定位**：解决**智能体与外部客观软件系统**之间的标准化互通，由 Anthropic 提出并迅速成为业界开放事实标准。
 * **核心内容**：
   * **统一协议抽象**：将外部系统的能力归一化为三大类一等公民：**Tools（函数执行）**、**Resources（上下文数据源读取）** 与 **Prompts（提示词模版）**。
-  * **语言无关与沙箱部署**：MCP Server 可以使用 Python、Go、Node.js 等任意语言编写，通过标准 Stdio 或 SSE（Server-Sent Events）与 ADK 主控互联。
-  * **动态工具发现**：Supervisor 启动时向 MCP Gateway 发送 `tools/list` 请求，动态感知企业最新的数据库操作工具或 Git 操作接口，免去硬编码集成。
+  * **语言无关与沙箱部署**：MCP Server 可以使用 Python、Go、Node.js 等任意语言编写，通过标准 Stdio 或 SSE（Server-Sent Events）与宿主专员连接。
+  * **动态工具发现**：专员 Agent 启动时向 MCP Gateway 发送 `tools/list` 请求，动态感知最新的数据库只读接口或 Git 仓库操作工具，免去代码硬编码。
 
-#### 3. 协同价值
+#### 3. 协同价值与边界归纳
 
-* **A2A** 管理的是**业务认知协同（Soft Cognitive Collaboration）**；
-* **MCP** 管理的是**物理工具执行（Hard Capability Execution）**；
-两者相得益彰，共同构筑了 Supervisor 连接人、AI 与企业 IT 基础设施的坚固纽带。
+* **A2A** 解决的是**“谁该指挥谁、谁该向谁汇报、状态如何同步”**的组织治理问题；
+* **MCP** 解决的是**“专员如何操作现实世界的 Git、SQL、API 与知识库”**的工程落地问题；
+* **关键准则**：**主控绝不越级去直接调用专员底下的业务 MCP 工具**，专员也绝不越权抢夺主控的全局 A2A 编排权。两者权责分离，共同铸就了企业级 Supervisor 模式的稳定性基石。
 
 ---
 
