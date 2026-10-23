@@ -173,14 +173,55 @@ review_tool = FunctionTool(func=complete_review)
 
 ---
 
-## 五、重点攻坚：Java 中如何正确实现 Supervisor 模式？
+## 五、企业级 Supervisor 模式全景深度剖析：架构、协议与支撑生态
 
-在以 Java 为主力技术栈的企业中，许多团队在尝试构建“主智能体协调多个子智能体”时，往往第一直觉是给主智能体配置 `subAgents`：
+在多智能体系统（Multi-Agent System）架构中，**Supervisor（主管/监督者）模式是连接“概率性认知推理”与“工业级确定性工程”最关键的中枢架构**。
 
-### 5.1 常见误区：为什么 `subAgents` 往往不是真正的 Supervisor？
+与传统的流水线不同，企业级真实场景充满了不确定性：用户需求模糊、外部 API 瞬时异常、子任务执行失败需重规划、以及高危操作必须等待人工确认。Supervisor 模式正是为了化解这一系列高熵挑战而生。
+
+---
+
+### 5.1 Supervisor 模式的核心定位与运作哲学
+
+Supervisor 模式并非单一的算法，而是一套**分工高度解耦的指挥官架构哲学**。其核心特征在于：
+
+1. **认知关注点分离（Separation of Cognitive Concerns）**：
+   * **Supervisor（主 Agent）**：不做具体的编码、分析或数据抓取，专职负责**意图拆解、任务分发、进度跟踪、质量验收与最终合成**。
+   * **Sub-Agents（专业子 Agent）**：不关心全局大盘和最终用户是谁，专职在各自的垂直领域（如架构规划、代码研发、安全合规扫描）深耕，提供高质量的局部认知推理。
+2. **上下文沙箱隔离（Context Sandbox Isolation）**：
+   主控并不需要将上百轮工具调用的细枝末节塞入自己的上下文。每个子 Agent 在独立的沙箱上下文中运行，只将提炼后的确定性成果回传给 Supervisor，从物理上杜绝了主模型的**注意力退化与上下文膨胀**。
+3. **控制权永不脱缰（Invariable Control Sovereignty）**：
+   无论调度何种专员智能体，整个会话的最终决策权、推进节奏与交付状态始终稳稳锁定在 Supervisor 手中。
+
+---
+
+### 5.2 整体技术架构全景图
+
+下图完整展示了企业级 Supervisor 智能体系统的技术架构，涵盖接入层、主控中枢、双通信协议总线、专业领域智能体集群，以及支撑生产级高可用的底层基础设施：
+
+::archify-diagram{src="/diagrams/adk-supervisor-architecture-deep-dive.html" title="Google ADK 企业级 Supervisor 模式技术架构全景图" height="600"}
+::
+
+在这套架构中，系统自顶向下由五大核心平面组成：
+
+1. **接入网关层（Client & Ingress Gateway）**：接收用户 Prompt 或企业触发事件，初始化全局唯一的调用上下文 `InvocationContext`，支持 REST、WebSocket 与 SSE 双向流式交互。
+2. **主控中枢层（Supervisor Controller Core）**：系统的中央大脑，集成意图解析、动态任务拆解（ReAct Planner）、多源冲突裁决以及独占的上下文管家。
+3. **双通信协议总线（Dual-Protocol Highway）**：
+   * **A2A（Agent-to-Agent）协议**：负责智能体与智能体之间的强契约调用、状态流转与事件推送。
+   * **MCP（Model Context Protocol）网关**：负责智能体标准化挂载企业外部异构数据源、代码仓与微服务 API。
+4. **领域专员与工具执行层（Specialized Units）**：左翼为聚焦业务职能的子智能体矩阵（Planner、Executor、Reviewer、Analyst）；右翼为基于 MCP 协议挂载的标准外挂工具。
+5. **企业级支撑服务底座（Enterprise Supporting Infrastructure）**：由记忆存储、服务注册发现、Temporal 状态持久化、全链路观测审计与 HITL 人机协同五大支柱构成，托底整个系统的工业级可用性。
+
+---
+
+### 5.3 主智能体（Supervisor Core）：控制权不灭与动态自愈机理
+
+在 Google ADK 中实现 Supervisor 模式，架构师最容易掉入的陷阱就是混淆了 **`subAgents`** 与 **`AgentTool`** 的本质语义差异：
+
+#### 1. 致命误区：误用 `subAgents` 导致控制权流失
 
 ```java
-// 典型误区示例：使用 subAgents 进行动态路由
+// 典型误区示例：错误地使用 subAgents 构造 Supervisor
 LlmAgent planner = LlmAgent.builder().name("Planner").description("负责任务拆解").model(model).build();
 LlmAgent executor = LlmAgent.builder().name("Executor").description("负责执行任务").model(model).build();
 
@@ -188,17 +229,19 @@ LlmAgent supervisor = LlmAgent.builder()
     .name("Supervisor")
     .model(model)
     .instruction("根据用户目标决定调用哪个专业智能体，全部完成后返回结果。")
-    .subAgents(planner, executor) // 注意：这里使用了 subAgents！
+    .subAgents(planner, executor) // 致命隐患：挂载为 subAgents！
     .build();
 ```
 
-* **运行机制**：在 Google ADK 底层，`subAgents` 触发的是 **Handoff（控制权交接）** 协议。
+* **运行机理**：在 Google ADK 底层，`subAgents` 触发的是 **Handoff（控制权交接）** 协议。
 * **致命隐患**：当 Supervisor 决定交接给 `Executor` 时，底层通过 `transferToAgent` 将**整场对话的发言权与主导权彻底转交给了 Executor**。此时 Executor 接管了与用户的上下文，它完成本职任务后，**并不会自动将控制权还给 Supervisor**！
 * 除非在 Executor 内部再硬编码写指令让其把控制权转移回 Supervisor，否则系统极易发生“控制权流失”、“死在子节点”或无法在主节点统一总结的现象。
 
-### 5.2 推荐正解：使用 `AgentTool` 实现真正的控制权不灭
+#### 2. 推荐正解：使用 `AgentTool` 实现真正的控制权常驻
 
-如果希望 Supervisor **始终稳坐指挥席**，在调用完专员后立刻拿回结果、统一归纳并评估下一步，**必须使用 `AgentTool`（智能体工具化）**：
+如果希望 Supervisor **始终稳坐指挥席**，在调用完专员后立刻拿回结果、统一归纳并评估下一步，**必须使用 `AgentTool`（智能体工具化）**。将专业 Agent 封装为无状态/隔离调用的标准高阶工具，主控可以像调用普通计算器一样调用子智能体：
+
+##### Java 生产实现
 
 ```java
 package com.wanghuanlab.adk.supervisor;
@@ -207,9 +250,9 @@ import com.google.adk.agents.LlmAgent;
 import com.google.adk.models.BaseModel;
 import com.google.adk.tools.AgentTool;
 
-public class SupervisorFactory {
+public class EnterpriseSupervisorFactory {
 
-    public static LlmAgent createEnterpriseSupervisor(BaseModel model) {
+    public static LlmAgent createSupervisor(BaseModel model) {
         // 1. 定义专业领域的业务 Agent（保持专注与高内聚）
         LlmAgent planner = LlmAgent.builder()
             .name("PlannerAgent")
@@ -229,33 +272,162 @@ public class SupervisorFactory {
             .model(model)
             .build();
 
-        // 2. 将专业 Agent 封装为无状态/隔离调用的标准高阶工具 (AgentTool)
-        // 这一步是关键！封装后，专业 Agent 在主控眼里就是一个单次输入、确定性返回结果的 Tool
+        // 2. 将专业 Agent 封装为无状态/沙箱调用的标准高阶工具 (AgentTool)
+        // 关键所在：封装后，专业 Agent 在主控眼中就是一个单次输入、确定性返回结果的 Tool！
         AgentTool plannerTool = AgentTool.fromAgent(planner);
         AgentTool executorTool = AgentTool.fromAgent(executor);
         AgentTool reviewerTool = AgentTool.fromAgent(reviewer);
 
-        // 3. 构建真正的中心化主控智能体 (Supervisor)
+        // 3. 构建中心化主控智能体 (Supervisor)
         return LlmAgent.builder()
             .name("MasterSupervisor")
             .model(model)
             .instruction("""
                 你是企业多智能体协同系统的总指挥 (Master Supervisor)。
-                你的职责：
-                1. 接收用户的复杂业务诉求，首先调用 PlannerAgent 生成分步执行计划；
-                2. 针对拆解出的每一步骤，调用 ExecutorAgent 获取执行结果；
+                你的核心职责：
+                1. 深度分析用户的复杂诉求，首先调用 PlannerAgent 生成分步执行计划；
+                2. 针对拆解出的每一步骤，通过 ExecutorAgent 工具获取执行结果；
                 3. 将产出交付给 ReviewerAgent 进行严格质量检查，若不合格要求重新执行；
                 4. 你始终拥有唯一的全局会话控制权，汇总所有专员工具的产物，向用户输出最终答卷。
                 """)
-            .tools(plannerTool, executorTool, reviewerTool) // 挂载为工具，而非 subAgents！
+            .tools(plannerTool, executorTool, reviewerTool) // 挂载为工具，保证控制权永远在主控！
             .build();
     }
 }
 ```
 
-* **控制流优势**：
-  * **控制权永不脱缰**：Supervisor 每次调起 `AgentTool` 时，子 Agent 在其独立的沙箱会话中单次执行完毕并返回结果字符串，控制权 100% 停留在 Supervisor 手中。
-  * **主控可任意规划与重试**：Supervisor 可以根据 `reviewerTool` 返回的审核得分，自主决定是否重调 `executorTool`，真正实现动态规划。
+##### Python 生产实现
+
+```python
+from google.adk.agents import LlmAgent
+from google.adk.tools import AgentTool
+
+# 1. 声明专员智能体
+planner_agent = LlmAgent(name="Planner", model="gemini-2.5-flash", instruction="输出技术方案与执行步骤")
+coder_agent = LlmAgent(name="Coder", model="gemini-2.5-flash", instruction="根据方案编写高质量生产代码")
+audit_agent = LlmAgent(name="Auditor", model="gemini-2.5-flash", instruction="对代码进行单测核验与漏洞扫描")
+
+# 2. 转换为标准沙箱工具
+planner_tool = AgentTool.from_agent(planner_agent)
+coder_tool = AgentTool.from_agent(coder_agent)
+audit_tool = AgentTool.from_agent(audit_agent)
+
+# 3. 组装主控 Supervisor
+supervisor = LlmAgent(
+    name="EnterpriseSupervisor",
+    model="gemini-2.5-flash",
+    instruction="""
+    你是企业级工程总指挥。
+    - 严禁自己直接生成未经审核的代码；
+    - 针对开发任务，依次调动 Planner -> Coder -> Auditor；
+    - 若 Auditor 打分低于 90，提取修改意见后重新调度 Coder 工具修正；
+    - 最终向用户输出完整的交付物与质检报告。
+    """,
+    tools=[planner_tool, coder_tool, audit_tool]
+)
+```
+
+---
+
+### 5.4 专业子智能体（Specialized Worker Sub-Agents）：高内聚领域沙箱
+
+子智能体（Worker Sub-Agents）的设计必须恪守**单一职责原则（Single Responsibility Principle）**：
+
+1. **严格限定职责边界**：
+   * **Planner Agent**：只做全局方案与拓扑分解，不碰具体业务执行。
+   * **Executor Agent**：专注于基于规范产出成果，不自行更改顶层计划。
+   * **Reviewer Agent**：专门依据合规 Checklist、单测覆盖率、性能规范对产物进行客观打分，绝不充当“好好先生”。
+   * **Data Analyst Agent**：专注于多维指标挖掘、日志聚类与数据统计。
+2. **强类型 DTO 交互契约**：
+   子智能体之间的产物交互，绝不能依靠漫无边际的非结构化长文本，而必须借助 **JSON Schema / Pydantic Model / Java Record** 规范出清晰的请求与响应契约（如 `ExecutionTaskRequest`、`ReviewReportResponse`）。
+3. **上下文物理隔离**：
+   子智能体每次被 `AgentTool` 唤起时，系统分配的是独立的局部执行上下文，子模型对外部微服务调用的十余轮往返记录，仅在局部沙箱中消耗，**最终只向 Supervisor 回送 1 条结构化的汇总事实**，从而极大延缓了主控 Context Window 的消耗速度。
+
+---
+
+### 5.5 协议与通信双翼：A2A 协同协议与 MCP 工具网关的融合
+
+在现代企业架构中，智能体系统既需要与“其他智能体”打交道，又需要与“现实系统”打交道。Google ADK 生态通过 **A2A** 与 **MCP** 双协议体系实现了清晰的职责分工：
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                        Supervisor 决策调度核心                         │
+└───────────────────┬────────────────────────────────┬───────────────────┘
+                    │                                │
+        A2A Protocol (Agent 间协同)       MCP Protocol (外部工具集成)
+                    │                                │
+┌───────────────────▼──────────────────┐ ┌───────────▼───────────────────┐
+│     Specialized Sub-Agents 集群      │ │       MCP Server 外部工具生态    │
+│  Planner · Executor · Reviewer · ... │ │  PostgreSQL · Git · Redis · K8s │
+└──────────────────────────────────────┘ └─────────────────────────────────┘
+```
+
+#### 1. A2A（Agent-to-Agent）协同协议
+
+* **定位**：解决**智能体与智能体之间（Agent-to-Agent）**的认知级通信。
+* **核心内容**：
+  * **Task Envelope 结构封装**：包含任务 TraceID、父会话引用、安全鉴权凭据与执行超时 Deadline。
+  * **认知流式反馈**：子 Agent 在长时间推理时，可通过 A2A 事件总线向上层 Supervisor 推送心跳与进度更新（如 `step: 3/5, progress: 60%`）。
+  * **仲裁与中断协议**：当专员遇到不可解异常或死循环嫌疑时，通过 A2A 标准的 `EscalateAction` 向上层主控交出异常堆栈。
+
+#### 2. MCP（Model Context Protocol）工具网关
+
+* **定位**：解决**智能体与外部客观软件系统**之间的互通，由 Anthropic 提出并迅速成为业界开放事实标准。
+* **核心内容**：
+  * **统一协议抽象**：将外部系统的能力归一化为三大类一等公民：**Tools（函数执行）**、**Resources（上下文数据源读取）** 与 **Prompts（提示词模版）**。
+  * **语言无关与沙箱部署**：MCP Server 可以使用 Python、Go、Node.js 等任意语言编写，通过标准 Stdio 或 SSE（Server-Sent Events）与 ADK 主控互联。
+  * **动态工具发现**：Supervisor 启动时向 MCP Gateway 发送 `tools/list` 请求，动态感知企业最新的数据库操作工具或 Git 操作接口，免去硬编码集成。
+
+#### 3. 协同价值
+
+* **A2A** 管理的是**业务认知协同（Soft Cognitive Collaboration）**；
+* **MCP** 管理的是**物理工具执行（Hard Capability Execution）**；
+两者相得益彰，共同构筑了 Supervisor 连接人、AI 与企业 IT 基础设施的坚固纽带。
+
+---
+
+### 5.6 企业级支撑服务体系：打造工业级可靠底座
+
+脱离了基础架构支撑的 Agent 系统只能是“玩具”。在企业级生产落地中，五大支撑服务为 Supervisor 模式筑牢了生命线：
+
+#### 1. 记忆与上下文存储服务（Memory & Context Store）
+* **分级存储架构**：
+  * **L1 瞬时状态（RAM / Redis）**：持久化当前的 `InvocationContext` 与共享 `Session State`，支撑高频毫秒级读写。
+  * **L2 长期记忆（Vector DB + RAG）**：沉淀历史业务决策案例、行业标准与领域知识，供 Supervisor 在规划阶段进行少样本检索增强（Few-Shot RAG）。
+* **上下文压缩治理**：当任务轮次超过预警水位时，由背景 Worker 自动启动“对话摘要压缩算法”，保留关键决策元数据并释放原始 Token。
+
+#### 2. 智能体与工具注册中心（Registry & Discovery）
+* **动态服务发现**：专员 Agent 与 MCP Server 启动后自动向注册中心登记元数据（能力描述、参数 JSON Schema、版本号、所属部门）。
+* **灰度路由与熔断**：主控根据版本权重（如 `PlannerAgent:v2.1` 灰度 20% 流量）进行平滑发布；当某专员持续超时或报错率超标时，注册中心自动切断流量并降级至兜底策略。
+
+#### 3. 状态机与持久化编排引擎（Temporal Durable Execution）
+* **长周期任务保活**：复杂企业研发或审批往往跨越数小时甚至数天，进程内内存极易因发布、OOM 或机器重启而丢失。
+* **Temporal 融合实践**：Supervisor 的每一次重大任务派发均作为 Temporal Workflow 中的一个 Activity。一旦节点宕机，Temporal 借助底层 Event History 重放（Replay），能够**分毫不差地在另一台服务器上原地唤醒 Supervisor**，彻底杜绝丢单。
+
+#### 4. 全链路可观测性与安全围栏（Observability & Guardrails）
+* **OpenTelemetry 深度链路追踪**：为每一次根请求生成 `TraceID`，主控拆解、A2A 专员调用、MCP 工具执行均对应为子 `Span`，在 Jaeger / Datadog 上清晰绘制出“Agent 思考路径瀑布图”。
+* **成本审计与限流**：实时统计每一轮调度消耗的 Prompt Tokens、Completion Tokens 与实际美元成本，设置租户级日配额硬上限。
+* **AI 安全围栏（Guardrails）**：前置拦截 Prompt 注入（Jailbreak），后置过滤敏感信息泄漏（PII 遮蔽），确保企业数据不出红线。
+
+#### 5. 人机协同介入通道（Human-in-the-Loop, HITL）
+* **风险定级与审批门禁**：对只读类工具（检索、读代码）直接放行；对具有写操作或破坏性的工具（修改生产数据库、提交代码合并、向外部打款）实施**阻断挂起**。
+* **状态机挂起与恢复**：系统自动生成工单推送到企微 / 钉钉 / Slack，由业务主管审批。主管点击“通过”后，系统注入审批 Token 唤醒挂起的 Supervisor 继续向下执行。
+
+---
+
+### 5.7 生产实战避坑指南
+
+在落地 Supervisor 模式时，建议架构团队重点防范以下典型陷阱：
+
+1. **防范 Supervisor 递归思考死锁（Thinking Deadlock）**：
+   * **现象**：主控认为专员交付的内容“稍有不足”，反复打回重新调度，导致 Token 急剧消耗且迟迟无法响应用户。
+   * **防御策略**：必须在 Supervisor 层设定**最大决策步数硬上限（Max Steps Limit，推荐 5-8 步）**。一旦超限，强制触发降级策略，将当前最优成果连同“质检风险警告”一并交付用户。
+2. **警惕子 Agent 返回无界长文本**：
+   * **防御策略**：在专员 AgentTool 上务必配置 `max_output_tokens` 与格式校验器，强制子智能体只输出结构化的最终 Summary，杜绝子智能体将万字调试日志倾倒给主控。
+3. **避免主控越俎代庖（Prompt Drift）**：
+   * **防御策略**：在 Supervisor 的 System Instruction 中必须严厉警告：*“你仅负责协调与汇总，绝不可自行替专员编写具体代码或替代专员作专业论断”*，并在输出层通过 Guardrail 进行角色合规校验。
+
+---
 
 ---
 
