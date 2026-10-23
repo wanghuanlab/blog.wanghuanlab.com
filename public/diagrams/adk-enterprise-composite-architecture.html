@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>企业级多智能体协同推荐架构</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" crossorigin="anonymous"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      background: #020617;
+      min-height: 100vh;
+      padding: 1.5rem;
+      color: white;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .header { margin-bottom: 1.5rem; }
+    .header-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .pulse-dot {
+      width: 10px; height: 10px; background: #34d399; border-radius: 50%;
+      box-shadow: 0 0 10px #34d399; animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.9); } }
+    h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; color: #f8fafc; }
+    .subtitle { color: #94a3b8; font-size: 0.8rem; margin-left: 1.5rem; }
+    .diagram-container {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 0.75rem;
+      border: 1px solid #1e293b;
+      padding: 1rem;
+      overflow-x: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    svg { width: 100%; min-width: 900px; display: block; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 0.6rem;
+      border: 1px solid #1e293b;
+      padding: 1rem;
+    }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; box-shadow: 0 0 6px #22d3ee; }
+    .card-dot.emerald { background: #34d399; box-shadow: 0 0 6px #34d399; }
+    .card-dot.orange { background: #fb923c; box-shadow: 0 0 6px #fb923c; }
+    .card h3 { font-size: 0.825rem; font-weight: 600; color: #e2e8f0; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; line-height: 1.5; }
+    .card li { margin-bottom: 0.35rem; }
+    .footer { text-align: center; margin-top: 1.25rem; color: #475569; font-size: 0.7rem; }
+    .toolbar { display: flex; gap: 0.5rem; margin-left: auto; align-items: center; }
+    .toolbar-toggle {
+      background: transparent; border: none; color: #64748b; cursor: pointer;
+      font-size: 1.1rem; padding: 0.2rem 0.4rem; border-radius: 0.25rem;
+    }
+    .toolbar-toggle:hover { color: #94a3b8; background: rgba(30, 41, 59, 0.5); }
+    .toolbar-actions { display: none; gap: 0.4rem; }
+    .toolbar.expanded .toolbar-actions { display: flex; }
+    .toolbar-actions button {
+      background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; color: #94a3b8;
+      padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-family: inherit; font-size: 0.7rem;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .toolbar-actions button:hover { background: rgba(51, 65, 85, 0.8); color: white; border-color: #475569; }
+    @media print { body { background: #020617; padding: 0.5rem; } .toolbar { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="container" id="report-container">
+    <div class="header">
+      <div class="header-row">
+        <div class="pulse-dot"></div>
+        <h1>企业级多智能体协同推荐架构 (Enterprise Composite Topology)</h1>
+        <div class="toolbar">
+          <div class="toolbar-actions">
+            <button onclick="copyAsImage(this)">📋 复制图片</button>
+            <button onclick="downloadPNG(this)">🖼️ PNG</button>
+            <button onclick="downloadPDF(this)">📄 PDF</button>
+          </div>
+          <button class="toolbar-toggle" onclick="this.parentElement.classList.toggle('expanded')" title="导出选项">⋯</button>
+        </div>
+      </div>
+      <p class="subtitle">Supervisor 集中调度、三大确定性工作流管道与 Temporal 分布式持久化底座的深度融合</p>
+    </div>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 960 500">
+        <defs>
+          <marker id="arrowhead" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 9 3, 0 6" fill="#64748b" />
+          </marker>
+          <marker id="arrowhead-cyan" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 9 3, 0 6" fill="#22d3ee" />
+          </marker>
+          <marker id="arrowhead-emerald" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 9 3, 0 6" fill="#34d399" />
+          </marker>
+          <marker id="arrowhead-rose" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 9 3, 0 6" fill="#fb7185" />
+          </marker>
+          <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+            <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        <!-- 连线 (底层渲染) -->
+        <!-- Supervisor -> Workflows -->
+        <path d="M 400 90 L 170 90 L 170 145" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead-cyan)" />
+        <line x1="480" y1="90" x2="480" y2="145" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead-cyan)" />
+        <path d="M 560 90 L 790 90 L 790 145" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead-cyan)" />
+
+        <text x="280" y="82" fill="#22d3ee" font-size="8">调用顺序流水</text>
+        <text x="525" y="125" fill="#22d3ee" font-size="8">扇出并发任务</text>
+        <text x="690" y="82" fill="#22d3ee" font-size="8">触发质检自愈</text>
+
+        <!-- Workflows -> State / Gate -->
+        <line x1="170" y1="205" x2="170" y2="260" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead-emerald)" />
+        <line x1="480" y1="205" x2="480" y2="260" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead-emerald)" />
+        <line x1="790" y1="205" x2="790" y2="260" stroke="#fb7185" stroke-width="1.5" marker-end="url(#arrowhead-rose)" />
+
+        <!-- Escalate Gate 回传 Supervisor -->
+        <path d="M 860 290 L 910 290 L 910 60 L 685 60" fill="none" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowhead-emerald)" />
+        <text x="915" y="180" fill="#34d399" font-size="8" transform="rotate(90, 915, 180)">质检达标放行 (Escalate 回传主控)</text>
+
+        <!-- Temporal -> Workflows 保活驱动 (从底部向上虚线连接) -->
+        <line x1="170" y1="380" x2="170" y2="320" stroke="#fb923c" stroke-width="1.2" stroke-dasharray="4,4" />
+        <line x1="480" y1="380" x2="480" y2="320" stroke="#fb923c" stroke-width="1.2" stroke-dasharray="4,4" />
+        <line x1="790" y1="380" x2="790" y2="320" stroke="#fb923c" stroke-width="1.2" stroke-dasharray="4,4" />
+
+        <!-- ==================== 1. Supervisor Layer ==================== -->
+        <rect x="275" y="30" width="410" height="60" rx="8" fill="#0f172a"/>
+        <rect x="275" y="30" width="410" height="60" rx="8" fill="rgba(8, 51, 68, 0.45)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="480" y="54" fill="white" font-size="12" font-weight="700" text-anchor="middle">Supervisor 协调总控层 (LlmAgent + AgentTool)</text>
+        <text x="480" y="72" fill="#94a3b8" font-size="8.5" text-anchor="middle">全局目标理解 · 动态任务规划 · 专员工具调用 · 成果汇总与交付</text>
+        <text x="480" y="84" fill="#22d3ee" font-size="7.5" text-anchor="middle">【核心优势】子 Agent 封装为 Tool，主控始终握紧对话权，绝不失控</text>
+
+        <!-- ==================== 2. Workflow Layer ==================== -->
+        <!-- Sequential -->
+        <rect x="50" y="145" width="240" height="60" rx="6" fill="#0f172a"/>
+        <rect x="50" y="145" width="240" height="60" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="170" y="168" fill="white" font-size="11" font-weight="600" text-anchor="middle">业务流水 (SequentialAgent)</text>
+        <text x="170" y="184" fill="#94a3b8" font-size="8" text-anchor="middle">规划 ──> 执行 ──> 归档</text>
+        <text x="170" y="196" fill="#34d399" font-size="7.5" text-anchor="middle">固定前后依赖 · 顺序合规不可跳步</text>
+
+        <!-- Parallel -->
+        <rect x="360" y="145" width="240" height="60" rx="6" fill="#0f172a"/>
+        <rect x="360" y="145" width="240" height="60" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="480" y="168" fill="white" font-size="11" font-weight="600" text-anchor="middle">并发分析 (ParallelAgent)</text>
+        <text x="480" y="184" fill="#94a3b8" font-size="8" text-anchor="middle">技术调研 || 安全扫描 || 成本核算</text>
+        <text x="480" y="196" fill="#34d399" font-size="7.5" text-anchor="middle">Fork-Join 汇聚 · 墙钟耗时极限压缩</text>
+
+        <!-- Loop -->
+        <rect x="670" y="145" width="240" height="60" rx="6" fill="#0f172a"/>
+        <rect x="670" y="145" width="240" height="60" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="790" y="168" fill="white" font-size="11" font-weight="600" text-anchor="middle">质检自愈闭环 (LoopAgent)</text>
+        <text x="790" y="184" fill="#94a3b8" font-size="8" text-anchor="middle">Drafter ⇄ Critic 质检评估</text>
+        <text x="790" y="196" fill="#fb7185" font-size="7.5" text-anchor="middle">max_iterations 兜底 · 严格规则打分</text>
+
+        <!-- ==================== 3. State & Gate Layer ==================== -->
+        <!-- Session State (接力流水) -->
+        <rect x="50" y="260" width="240" height="50" rx="6" fill="#0f172a"/>
+        <rect x="50" y="260" width="240" height="50" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="170" y="282" fill="white" font-size="10" font-weight="600" text-anchor="middle">Session State 总线</text>
+        <text x="170" y="298" fill="#a78bfa" font-size="7.5" text-anchor="middle">强类型 output_key 结构化接力</text>
+
+        <!-- Parallel Gather Sync -->
+        <rect x="360" y="260" width="240" height="50" rx="6" fill="#0f172a"/>
+        <rect x="360" y="260" width="240" height="50" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="480" y="282" fill="white" font-size="10" font-weight="600" text-anchor="middle">Gather 屏障同步器</text>
+        <text x="480" y="298" fill="#a78bfa" font-size="7.5" text-anchor="middle">合并多源分析结果，消解长尾延迟</text>
+
+        <!-- Escalate Gate -->
+        <rect x="670" y="260" width="240" height="50" rx="6" fill="#0f172a"/>
+        <rect x="670" y="260" width="240" height="50" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="790" y="282" fill="white" font-size="10" font-weight="600" text-anchor="middle">Escalate 破环门禁</text>
+        <text x="790" y="298" fill="#fb7185" font-size="7.5" text-anchor="middle">tool_context.actions.escalate 判定</text>
+
+        <!-- ==================== 4. Durable Execution Layer ==================== -->
+        <rect x="30" y="360" width="900" height="90" rx="10" fill="rgba(251, 146, 60, 0.1)" stroke="#fb923c" stroke-width="1.2" stroke-dasharray="6,4"/>
+        <text x="45" y="380" fill="#fb923c" font-size="10" font-weight="700">Durable Execution Plane（Temporal 分布式任务引擎 · 企业生产级可靠性托底）</text>
+
+        <rect x="50" y="390" width="860" height="48" rx="6" fill="#0f172a"/>
+        <rect x="50" y="390" width="860" height="48" rx="6" fill="rgba(251, 146, 60, 0.3)" stroke="#fb923c" stroke-width="1.5"/>
+        <text x="480" y="411" fill="white" font-size="11" font-weight="600" text-anchor="middle">Temporal 持久化引擎 (Workflow & Activity SDK)</text>
+        <text x="480" y="426" fill="#94a3b8" font-size="8.5" text-anchor="middle">长时任务透明保活 · 服务宕机无损自愈恢复 · 人工多级审批断点 (Signal / Query) · Saga 逆向事务补偿</text>
+      </svg>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot cyan"></div>
+          <h3>主控权永不脱缰</h3>
+        </div>
+        <ul>
+          <li>• Supervisor 通过 AgentTool 调用专员智能体</li>
+          <li>• 子 Agent 在沙箱隔离环境中运行完单次任务即返回</li>
+          <li>• 主控始终保有会话主导权，杜绝 Handoff 模式下的迷航</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot emerald"></div>
+          <h3>动静结合的高弹性</h3>
+        </div>
+        <ul>
+          <li>• 模糊非确定性意图交给 LLM Supervisor 规划</li>
+          <li>• 严谨业务依赖交给 Sequential 固化前后顺序</li>
+          <li>• 独立耗时任务交给 Parallel 并发压缩延迟</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot orange"></div>
+          <h3>生产级长任务兜底</h3>
+        </div>
+        <ul>
+          <li>• 外层统一由 Temporal 状态机引擎保活</li>
+          <li>• 服务重启或网络中断时任务从最近检查点无缝恢复</li>
+          <li>• 支持数小时甚至数天跨周期的人工审批挂起</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="footer">WangHuan Lab • Enterprise Multi-Agent Composite Architecture</p>
+  </div>
+
+  <script>
+    async function copyAsImage(btn) {
+      const orig = btn.textContent;
+      try {
+        const el = document.getElementById('report-container');
+        const r = el.getBoundingClientRect();
+        const pad = 24;
+        const canvas = await html2canvas(document.body, { backgroundColor: '#020617', scale: 2, useCORS: true, ignoreElements: (e) => e.classList && e.classList.contains('toolbar'), x: r.left + window.scrollX - pad, y: r.top + window.scrollY - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+        const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        btn.textContent = '✓ 已复制';
+      } catch (e) { btn.textContent = '✗ 失败'; }
+      setTimeout(() => btn.textContent = orig, 2000);
+    }
+    async function downloadPNG(btn) {
+      const orig = btn.textContent; btn.textContent = '⏳ ...';
+      try {
+        const el = document.getElementById('report-container');
+        const r = el.getBoundingClientRect();
+        const pad = 24;
+        const canvas = await html2canvas(document.body, { backgroundColor: '#020617', scale: 2, useCORS: true, ignoreElements: (e) => e.classList && e.classList.contains('toolbar'), x: r.left + window.scrollX - pad, y: r.top + window.scrollY - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+        const link = document.createElement('a'); link.download = 'adk-enterprise-composite-architecture.png'; link.href = canvas.toDataURL('image/png'); link.click();
+        btn.textContent = '✓ 已下载';
+      } catch (e) { btn.textContent = '✗ 失败'; }
+      setTimeout(() => btn.textContent = orig, 2000);
+    }
+    async function downloadPDF(btn) {
+      const orig = btn.textContent; btn.textContent = '⏳ ...';
+      try {
+        const el = document.getElementById('report-container');
+        const r = el.getBoundingClientRect();
+        const pad = 24;
+        const canvas = await html2canvas(document.body, { backgroundColor: '#020617', scale: 2, useCORS: true, ignoreElements: (e) => e.classList && e.classList.contains('toolbar'), x: r.left + window.scrollX - pad, y: r.top + window.scrollY - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const orientation = canvas.width > canvas.height ? 'landscape' : 'portrait';
+        const pdf = new jsPDF({ orientation, unit: 'px', format: [canvas.width, canvas.height], hotfixes: ['px_scaling'] });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save('adk-enterprise-composite-architecture.pdf');
+        btn.textContent = '✓ 已保存';
+      } catch (e) { btn.textContent = '✗ 失败'; }
+      setTimeout(() => btn.textContent = orig, 2000);
+    }
+  </script>
+</body>
+</html>

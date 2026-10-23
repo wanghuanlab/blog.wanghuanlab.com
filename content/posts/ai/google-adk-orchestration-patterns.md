@@ -31,22 +31,8 @@ draft: false
 
 在深入研究 Google ADK 之前，必须首先建立对**两层核心概念**的清晰认知。这是业界在多智能体系统设计中最容易混淆、但又是最核心的分水岭：
 
-```text
-┌────────────────────────────────────────────────────────────────────────┐
-│           Multi-Agent Pattern（多智能体协作模式 · 顶层架构设计模式）      │
-│  Supervisor · Coordinator/Dispatcher · Handoff · Hierarchical · ...    │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ 组装与编排
-┌───────────────────────────────────▼────────────────────────────────────┐
-│            Workflow Agent（内置工作流类型 · 确定性代码执行原语）         │
-│  SequentialAgent · ParallelAgent · LoopAgent · CustomAgent (BaseAgent) │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ 驱动
-┌───────────────────────────────────▼────────────────────────────────────┐
-│            Cognitive Execution Unit（认知执行单元 · 概率推理引擎）       │
-│                 LlmAgent · AgentTool · ToolContext                     │
-└────────────────────────────────────────────────────────────────────────┘
-```
+::archify-diagram{src="/diagrams/adk-pattern-vs-workflow.html" title="Google ADK 概念分层架构体系 (Pattern vs Workflow)" height="500"}
+::
 
 1. **Workflow Agent（内置工作流类型）**：
    * **定位**：框架提供的**具体类实现**（如 `SequentialAgent`、`ParallelAgent`、`LoopAgent`）。
@@ -102,13 +88,12 @@ draft: false
 
 ## 四、三大内置工作流原语深度剖析
 
+::archify-diagram{src="/diagrams/adk-three-primitives-comparison.html" title="Google ADK 三大确定性工作流原语运行拓扑对比" height="460"}
+::
+
 ### 4.1 SequentialAgent（顺序流水线）
 
 `SequentialAgent` 接收一个包含多个子智能体的有序列表，在被触发时，按照数组下标严格从前向后依序调度。
-
-```text
-[Input Task] ──> [Step 1: Extractor] ──(output_key)──> [Step 2: Transformer] ──(output_key)──> [Step 3: Writer] ──> [Final Result]
-```
 
 * **确定性推进行为**：除非子智能体显式抛出未捕获异常或请求人工中断，否则控制权永远只能单向向前流转，绝不会发生逆流或跳步。
 * **数据接力机制**：每个子智能体配置 `output_key`（如 `output_key="extracted_data"`），执行完毕后该 key 对应的值自动持久化至共享 Session State。后续智能体可以在其 Prompt 模板或工具参数中直接通过 `{extracted_data}` 引用。
@@ -143,12 +128,6 @@ code_pipeline = SequentialAgent(
 
 当一个综合任务可以被拆解为多个**互不依赖、可独立推进的子维度**时，串行处理会造成巨大的时间浪费。`ParallelAgent` 实现了经典的 **Fan-Out / Gather（扇出与收集）** 拓扑：
 
-```text
-                    ┌──> [Sub-Agent A: 性能架构分析] ──┐
-[Input Task] ──Fork─┼──> [Sub-Agent B: 安全合规扫描] ──┼─Join──> [Aggregator Agent]
-                    └──> [Sub-Agent C: 商业成本核算] ──┘
-```
-
 * **并行触发（Fork）**：`ParallelAgent` 在同一时间将共享上下文广播分发给所有配置的子智能体，各智能体异步并发执行。
 * **屏障同步（Join）**：主线程在 Join 屏障处挂起等待，直到所有并发子智能体均完成执行（或达到超时阈值）后，统一收集所有产物并写入 Session State。
 * **延迟优化**：端到端墙钟耗时从串行累加的 `O(Σ T_i)` 骤降至最慢单步决定的 `O(max(T_i) + δ)`。
@@ -167,13 +146,7 @@ parallel_auditors = ParallelAgent(
 
 ### 4.3 LoopAgent（循环迭代与自愈）
 
-在复杂生成式任务中，初稿往往无法一次性满足高标准的业务规则。**`LoopAgent` 构建了“生成者-审核者（Generator-Critic）”的自愈迭代环**：
-
-```text
-            ┌────────────────────────────────────────┐
-            ▼                                        │ 打回修改 (未达标)
-   [Drafter / Fixer Agent] ──> [Critic / Validator] ─┴─> (满足要求 / Escalate) ──> [Exit]
-```
+在复杂生成式任务中，初稿往往无法一次性满足高标准的业务规则。**`LoopAgent` 构建了“生成者-审核者（Generator-Critic）”的自愈迭代环**。
 
 若缺乏工程约束，循环流极易沦为灾难性的“死循环”或“Token 燃烧器”。Google ADK 通过**两道严密的防线**实现确定性闭环控制：
 
@@ -416,29 +389,8 @@ enterprise_maop_pipeline = SequentialAgent(
 
 针对复杂的生产系统，推荐采用以下分层复合架构：
 
-```text
-               ┌───────────────────────────────────────────────┐
-               │    Supervisor 协调层 (LlmAgent + AgentTool)    │
-               │   负责理解综合目标、动态任务拆解与结果汇总签发     │
-               └───────┬───────────────────────┬───────────────┘
-                       │                       │
-         ┌─────────────▼─────────┐   ┌─────────▼──────────────┐
-         │ 业务流水 (Sequential)  │   │ 并发分析 (Parallel)    │
-         │ 固化依赖顺序，确保步骤合规 │   │ 独立多源扫描，压缩墙钟延迟 │
-         └─────────────┬─────────┘   └─────────┬──────────────┘
-                       │                       │
-                       └───────────┬───────────┘
-                                   │
-                       ┌───────────▼───────────┐
-                       │ 质检自愈闭环 (Loop)     │
-                       │ 审核员严格把关，超标退出 │
-                       └───────────┬───────────┘
-                                   │
-               ┌───────────────────▼───────────────────────────┐
-               │   Temporal 分布式持久化底座 (Durable Engine)   │
-               │    长任务保活 · 崩溃无损恢复 · 人工断点签批     │
-               └───────────────────────────────────────────────┘
-```
+::archify-diagram{src="/diagrams/adk-enterprise-composite-architecture.html" title="企业级多智能体协同推荐架构 (Supervisor + Workflow + Temporal)" height="540"}
+::
 
 1. **Supervisor + AgentTool 坐镇总控**：主 Agent 负责智能感知与调度，把子 Agent 当作工具调用，控制权永不流失。
 2. **ParallelAgent 负责并发加速**：独立无依赖的数据抓取、跨领域背景分析并发推进。
